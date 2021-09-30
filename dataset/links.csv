@@ -1,0 +1,5 @@
+country,link,start_date,end_date,is_period_flexible
+US,https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/,2020-04-12,2021-03-06,FALSE
+India,https://api.covid19india.org/csv/latest/states.csv,2020-01-30,2021-09-29,TRUE
+Italy,https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv,2020-02-24,2021-09-29,TRUE
+China,https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/,2020-01-22,2021-08-04,FALSE
