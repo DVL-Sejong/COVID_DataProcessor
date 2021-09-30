@@ -1,7 +1,6 @@
 from COVID_DataProcessor.util import get_date_format
 from dataclasses import dataclass, field
 from datetime import datetime, date
-from typing import List
 from enum import Enum
 
 import hashlib
@@ -16,7 +15,7 @@ class Country(Enum):
 
 @dataclass
 class PreprocessInfo:
-    start = None
+    start: datetime = None
     _start: datetime = field(init=False, repr=False)
     end: datetime = None
     _end: datetime = field(init=False, repr=False)
@@ -62,7 +61,7 @@ class PreprocessInfo:
     @start.setter
     def start(self, start):
         if start is None:
-            self._start = date(2020, 1, 22)
+            self._start = datetime.now().date()
 
         if isinstance(start, str):
             format = get_date_format(start)

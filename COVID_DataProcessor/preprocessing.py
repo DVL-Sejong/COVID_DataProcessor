@@ -1,5 +1,6 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo
-from COVID_DataProcessor.io import load_origin_data, load_population, save_preprocessed_dict, save_sird_dict, load_links
+from COVID_DataProcessor.io import load_links, load_origin_data, load_population
+from COVID_DataProcessor.io import save_setting, save_preprocessed_dict, save_sird_dict
 
 import pandas as pd
 import numpy as np
@@ -16,6 +17,15 @@ def preprocess(parsed_df, population, pre_info):
         parsed_df = divide_by_population(parsed_df, population)
 
     return parsed_df
+
+
+def preprocess_data_dict(data_dict, pre_info, population_df):
+    preprocessed_dict = dict()
+    for region, region_df in data_dict.items():
+        preprocessed_df = preprocess(region_df, population_df.loc[region, 'population'], pre_info)
+        preprocessed_dict.update({region: preprocessed_df})
+
+    return preprocessed_dict
 
 
 def convert_columns_to_sird(dataset_dict, pre_info, population_df):
@@ -151,16 +161,16 @@ def interpolate(region_values, start_index, end_index):
 
 if __name__ == '__main__':
     country = Country.ITALY
-    link_df = load_links().loc['Italy', :]
-    data_dict = load_origin_data(country)
-    population_df = load_population(country)
+    link_df = load_links(country)
+
     pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=True, smoothing=True, window=5, divide=True)
+    save_setting(pre_info, 'pre_info')
 
-    preprocessed_dict = dict()
-    for region, region_df in data_dict.items():
-        preprocessed_df = preprocess(region_df, population_df.loc[region, 'population'], pre_info)
-        preprocessed_dict.update({region: preprocessed_df})
+    data_dict = load_origin_data(country)
+    population_df = load_population(country)
+
+    preprocessed_dict = preprocess_data_dict(data_dict, pre_info, population_df)
     save_preprocessed_dict(country, pre_info, preprocessed_dict)
 
     sird_dict = convert_columns_to_sird(preprocessed_dict, pre_info, population_df)

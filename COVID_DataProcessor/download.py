@@ -15,16 +15,16 @@ def download_raw_file(link):
 
 
 def download_origin_data(country):
-    link_df = load_links()
+    link_df = load_links(country)
 
     if country == Country.US:
-        download_us_origin_data(link_df.loc['US', :])
+        download_us_origin_data(link_df)
     elif country == Country.CHINA:
-        download_china_origin_data(link_df.loc['China', :])
+        download_china_origin_data(link_df)
     elif country == Country.ITALY:
-        download_italy_origin_data(link_df.loc['Italy', :])
+        download_italy_origin_data(link_df)
     elif country == Country.INDIA:
-        download_india_origin_data(link_df.loc['India', :])
+        download_india_origin_data(link_df)
     else:
         raise Exception(f'not registered country, {country}')
 

@@ -1,23 +1,23 @@
-from COVID_DataProcessor.datatype import Country
-from os.path import join, abspath, dirname
+from COVID_DataProcessor.datatype import Country, PreprocessInfo
+from COVID_DataProcessor.util import get_country_name
+from dataclasses import fields
+from os.path import join, abspath, dirname, isfile
 from pathlib import Path
 
 import pandas as pd
 
 ROOT_PATH = Path(abspath(dirname(__file__))).parent
 DATASET_PATH = join(ROOT_PATH, 'dataset')
+SETTING_PATH = join(ROOT_PATH, 'settings')
 
 
-def get_country_name(country):
-    if country == Country.US:
-        return country.name
-    else:
-        return country.name.capitalize()
-
-
-def load_links():
+def load_links(country=None):
     link_path = join(DATASET_PATH, 'links.csv')
     link_df = pd.read_csv(link_path, index_col='country')
+
+    if country is not None:
+        link_df = link_df.loc[get_country_name(country), :]
+
     return link_df
 
 
@@ -78,5 +78,35 @@ def save_sird_dict(country, pre_info, sird_dict):
     save_dict(sird_path, sird_dict, 'SIRD')
 
 
+def save_setting(param_class, class_name):
+    new_param_dict = dict()
+    new_param_dict.update({'hash': param_class.get_hash()})
+
+    for field in fields(param_class):
+        if field.name[0] == '_': continue
+        new_param_dict.update({field.name: getattr(param_class, field.name)})
+
+    param_df = pd.DataFrame(columns=list(new_param_dict.keys()))
+    param_df = param_df.append(new_param_dict, ignore_index=True)
+    param_df = param_df.set_index('hash')
+
+    filename = f'{class_name}.csv'
+    if isfile(join(SETTING_PATH, filename)):
+        df = pd.read_csv(join(SETTING_PATH, filename), index_col='hash')
+        if param_class.get_hash() not in df.index.tolist():
+            df = param_df.append(df, ignore_index=False)
+            df.to_csv(join(SETTING_PATH, filename))
+            print(f'updating settings to {join(SETTING_PATH, filename)}')
+    else:
+        param_df.to_csv(join(SETTING_PATH, filename))
+        print(f'saving settings to {join(SETTING_PATH, filename)}')
+
+
 if __name__ == '__main__':
-    print(load_regions(Country.ITALY))
+    country = Country.INDIA
+    link_df = load_links().loc['India', :]
+    data_dict = load_origin_data(country)
+    population_df = load_population(country)
+    pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
+                              increase=True, daily=True, smoothing=True, window=5, divide=True)
+    save_setting(pre_info, 'pre_info')

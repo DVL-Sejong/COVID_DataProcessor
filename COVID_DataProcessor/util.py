@@ -1,4 +1,12 @@
+from COVID_DataProcessor.datatype import Country
 from datetime import datetime, timedelta
+
+
+def get_country_name(country):
+    if country == Country.US:
+        return country.name
+    else:
+        return country.name.capitalize()
 
 
 def get_period(start_date, end_date, out_date_format=None):
