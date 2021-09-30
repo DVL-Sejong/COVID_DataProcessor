@@ -127,3 +127,21 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# arguments
+arguments/
+
+# dataset
+dataset/
+
+# docs
+docs/
+
+# example
+example/
+
+# results
+results/
+
+# settings/
+settings/
