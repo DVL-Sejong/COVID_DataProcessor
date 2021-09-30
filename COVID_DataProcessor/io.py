@@ -33,14 +33,22 @@ def load_regions(country):
     return regions
 
 
-def save_raw_data(country, df_dict):
+def save_raw_file(country, raw_df, name):
     raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
     Path(raw_path).mkdir(parents=True, exist_ok=True)
 
+    raw_df.to_csv(join(raw_path, f'{name}.csv'))
+    print(f'saving raw file to {raw_path}')
+
+
+def save_origin_data(country, df_dict):
+    origin_path = join(DATASET_PATH, get_country_name(country), 'origin_data')
+    Path(origin_path).mkdir(parents=True, exist_ok=True)
+
     for region, region_df in df_dict.items():
-        saving_path = join(raw_path, f'{region}.csv')
+        saving_path = join(origin_path, f'{region}.csv')
         region_df.to_csv(saving_path)
-        print(f'saving {region} raw data to {saving_path}')
+        print(f'saving {region} origin data to {saving_path}')
 
 
 if __name__ == '__main__':
