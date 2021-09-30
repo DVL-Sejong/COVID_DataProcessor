@@ -15,16 +15,16 @@ def download_raw_file(link):
 
 
 def download_origin_data(country):
-    link_df = load_links()
+    link_df = load_links(country)
 
     if country == Country.US:
-        download_us_origin_data(link_df.loc['US', :])
+        download_us_origin_data(link_df)
     elif country == Country.CHINA:
-        download_china_origin_data(link_df.loc['China', :])
+        download_china_origin_data(link_df)
     elif country == Country.ITALY:
-        download_italy_origin_data(link_df.loc['Italy', :])
+        download_italy_origin_data(link_df)
     elif country == Country.INDIA:
-        download_india_origin_data(link_df.loc['India', :])
+        download_india_origin_data(link_df)
     else:
         raise Exception(f'not registered country, {country}')
 
@@ -32,8 +32,7 @@ def download_origin_data(country):
 def get_empty_df_dict(data_info):
     country = Country[data_info.name.upper()]
     regions = load_regions(country)
-    index_period = get_period(data_info['start_date'], data_info['end_date'],
-                              in_date_format='%Y-%m-%d', out_date_format='%Y-%m-%d')
+    index_period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%Y-%m-%d')
 
     df_dict = dict()
     for region in regions:
@@ -49,10 +48,8 @@ def download_us_origin_data(data_info):
     regions = load_regions(country)
     df_dict = get_empty_df_dict(data_info)
 
-    query_period = get_period(data_info['start_date'], data_info['end_date'],
-                              in_date_format='%Y-%m-%d', out_date_format='%m-%d-%Y')
-    index_period = get_period(data_info['start_date'], data_info['end_date'],
-                              in_date_format='%Y-%m-%d', out_date_format='%Y-%m-%d')
+    query_period = get_period(data_info['start_date'], data_info['end_date'],  out_date_format='%m-%d-%Y')
+    index_period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%Y-%m-%d')
 
     for i, date in enumerate(query_period):
         print(f'download US raw data on {index_period[i]}')
@@ -72,8 +69,8 @@ def download_us_origin_data(data_info):
 
 
 def download_csse_raw_data(df_dict, country_name, regions, link, start_date, end_date, country_column, state_column):
-    query_period = get_period(start_date, end_date, in_date_format='%Y-%m-%d', out_date_format='%m-%d-%Y')
-    index_period = get_period(start_date, end_date, in_date_format='%Y-%m-%d', out_date_format='%Y-%m-%d')
+    query_period = get_period(start_date, end_date, out_date_format='%m-%d-%Y')
+    index_period = get_period(start_date, end_date, out_date_format='%Y-%m-%d')
 
     for i, date in enumerate(query_period):
         print(f'download {country_name} raw data on {index_period[i]}')
@@ -114,7 +111,7 @@ def download_italy_origin_data(data_info):
     country = Country[data_info.name.upper()]
     regions = load_regions(country)
     df_dict = get_empty_df_dict(data_info)
-    period = get_period(data_info['start_date'], data_info['end_date'], in_date_format='%Y-%m-%d')
+    period = get_period(data_info['start_date'], data_info['end_date'])
 
     raw_df = download_raw_file(data_info['link'])
     save_raw_file(country, raw_df, 'Italy')
@@ -142,8 +139,7 @@ def download_india_origin_data(data_info):
     country = Country[data_info.name.upper()]
     regions = load_regions(country)
     df_dict = get_empty_df_dict(data_info)
-    period = get_period(data_info['start_date'], data_info['end_date'],
-                        in_date_format='%Y-%m-%d', out_date_format='%Y-%m-%d')
+    period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%Y-%m-%d')
 
     raw_df = download_raw_file(data_info['link'])
     save_raw_file(country, raw_df, 'India')
