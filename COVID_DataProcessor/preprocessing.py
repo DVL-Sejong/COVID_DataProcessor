@@ -159,12 +159,7 @@ def interpolate(region_values, start_index, end_index):
     return region_values
 
 
-if __name__ == '__main__':
-    country = Country.ITALY
-    link_df = load_links(country)
-
-    pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, smoothing=True, window=5, divide=True)
+def get_preprocessed_dict(country, pre_info):
     save_setting(pre_info, 'pre_info')
 
     data_dict = load_origin_data(country)
@@ -173,5 +168,19 @@ if __name__ == '__main__':
     preprocessed_dict = preprocess_data_dict(data_dict, pre_info, population_df)
     save_preprocessed_dict(country, pre_info, preprocessed_dict)
 
+    return preprocessed_dict
+
+
+if __name__ == '__main__':
+    country = Country.ITALY
+    link_df = load_links(country)
+    population_df = load_population(country)
+
+    pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
+                              increase=True, daily=True, smoothing=True, window=5, divide=True)
+
+    preprocessed_dict = get_preprocessed_dict(country, pre_info)
+
     sird_dict = convert_columns_to_sird(preprocessed_dict, pre_info, population_df)
     save_sird_dict(country, pre_info, sird_dict)
+

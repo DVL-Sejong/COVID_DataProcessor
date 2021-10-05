@@ -35,6 +35,18 @@ def validate(date: str, format: str) -> bool:
         return False
 
 
+def get_common_dates(dates1, dates2):
+    start1 = datetime.strptime(dates1[0], '%Y-%m-%d')
+    start2 = datetime.strptime(dates2[0], '%Y-%m-%d')
+    start_date = start2 if start1 < start2 else start1
+
+    end1 = datetime.strptime(dates1[-1], '%Y-%m-%d')
+    end2 = datetime.strptime(dates2[-1], '%Y-%m-%d')
+    end_date = end1 if end1 < end2 else end2
+
+    common_dates = get_period(start_date, end_date, out_date_format='%Y-%m-%d')
+    return common_dates
+
 if __name__ == '__main__':
     start_date = '2020-01-01'
     end_date = '2020-01-05'

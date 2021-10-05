@@ -11,6 +11,7 @@ import pandas as pd
 ROOT_PATH = Path(abspath(dirname(__file__))).parent
 DATASET_PATH = join(ROOT_PATH, 'dataset')
 SETTING_PATH = join(ROOT_PATH, 'settings')
+RESULT_PATH = join(ROOT_PATH, 'results')
 
 
 def load_links(country=None):
@@ -47,6 +48,18 @@ def load_origin_data(country):
     return data_dict
 
 
+def load_preprocessed_data(country, pre_info):
+    pre_path = join(DATASET_PATH, get_country_name(country), pre_info.get_hash())
+    regions = load_regions(country)
+    pre_dict = dict()
+
+    for region in regions:
+        region_df = pd.read_csv(join(pre_path, f'{region}.csv'), index_col='date')
+        pre_dict.update({region: region_df})
+
+    return pre_dict
+
+
 def load_sird_dict(country, pre_info):
     sird_path = join(DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash())
     sird_path_list = glob(f'{sird_path}/*.csv')
@@ -81,6 +94,12 @@ def sird_to_I(country, pre_info):
         I_df.loc[region, :] = region_I
 
     return I_df
+
+
+def load_r0_df(country):
+    r0_path = join(DATASET_PATH, get_country_name(country), 'r0.csv')
+    r0_df = pd.read_csv(r0_path, index_col='regions')
+    return r0_df
 
 
 def save_raw_file(country, raw_df, name):
@@ -122,6 +141,14 @@ def save_I_df(country, pre_info, I_df):
     saving_path = join(i_path, 'I.csv')
     I_df.to_csv(saving_path)
     print(f'saving I_df to {saving_path}')
+
+
+def save_sird_initial_info(initial_df, country, region):
+    initial_path = join(RESULT_PATH, 'SIRD', get_country_name(country), 'Initial_values')
+    Path(initial_path).mkdir(parents=True, exist_ok=True)
+    saving_path = join(initial_path, f'{region}.csv')
+    initial_df.to_csv(saving_path)
+    print(f'saving {region} initial value to {saving_path}')
 
 
 def save_setting(param_class, class_name):
