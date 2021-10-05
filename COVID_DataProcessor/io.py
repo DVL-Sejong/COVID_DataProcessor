@@ -1,10 +1,12 @@
-from COVID_DataProcessor.datatype import Country, PreprocessInfo
-from COVID_DataProcessor.util import get_country_name
+from COVID_DataProcessor.datatype import Country, PreprocessInfo, get_country_name
+from COVID_DataProcessor.util import get_period
 from dataclasses import fields
-from os.path import join, abspath, dirname, isfile
+from os.path import join, abspath, dirname, isfile, split
 from pathlib import Path
+from glob import glob
 
 import pandas as pd
+
 
 ROOT_PATH = Path(abspath(dirname(__file__))).parent
 DATASET_PATH = join(ROOT_PATH, 'dataset')
@@ -45,6 +47,42 @@ def load_origin_data(country):
     return data_dict
 
 
+def load_sird_dict(country, pre_info):
+    sird_path = join(DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash())
+    sird_path_list = glob(f'{sird_path}/*.csv')
+
+    sird_dict = dict()
+    for target_path in sird_path_list:
+        _, tail = split(target_path)
+        region_name = tail.split('.csv')[0]
+        sird_df = pd.read_csv(target_path, index_col='date')
+        sird_dict.update({region_name: sird_df})
+
+    return sird_dict
+
+
+def load_I_df(country, pre_info):
+    i_path = join(DATASET_PATH, get_country_name(country), 'i_data', pre_info.get_hash(), 'I.csv')
+    I_df = pd.read_csv(i_path, index_col='regions')
+    return I_df
+
+
+def sird_to_I(country, pre_info):
+    regions = load_regions(country)
+    link_df = load_links(country)
+    dates = get_period(start_date=link_df['start_date'], end_date=link_df['end_date'], out_date_format='%Y-%m-%d')
+
+    I_df = pd.DataFrame(index=regions, columns=dates)
+    I_df.index.name = 'regions'
+
+    sird_dict = load_sird_dict(country, pre_info)
+    for region, sird_df in sird_dict.items():
+        region_I = sird_df.loc[:, 'infected']
+        I_df.loc[region, :] = region_I
+
+    return I_df
+
+
 def save_raw_file(country, raw_df, name):
     raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
     Path(raw_path).mkdir(parents=True, exist_ok=True)
@@ -76,6 +114,14 @@ def save_sird_dict(country, pre_info, sird_dict):
     sird_path = join(DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash())
     Path(sird_path).mkdir(parents=True, exist_ok=True)
     save_dict(sird_path, sird_dict, 'SIRD')
+
+
+def save_I_df(country, pre_info, I_df):
+    i_path = join(DATASET_PATH, get_country_name(country), 'i_data', pre_info.get_hash())
+    Path(i_path).mkdir(parents=True, exist_ok=True)
+    saving_path = join(i_path, 'I.csv')
+    I_df.to_csv(saving_path)
+    print(f'saving I_df to {saving_path}')
 
 
 def save_setting(param_class, class_name):
