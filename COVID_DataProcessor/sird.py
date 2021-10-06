@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     # SIRD data
     pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, smoothing=True, window=5, divide=False)
+                              increase=True, daily=True, smoothing=True, window=5, divide=True)
     sird_dict = load_sird_dict(country, pre_info)
     sird_dates = sird_dict[regions[0]].index.tolist()
 
@@ -27,6 +27,7 @@ if __name__ == '__main__':
     start_date = common_dates[0]
     end_date = common_dates[-1]
 
+    # divide False only
     pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=False, smoothing=True, window=5, divide=False)
     pre_dict = get_preprocessed_dict(country, pre_info)
@@ -41,4 +42,4 @@ if __name__ == '__main__':
         region_population = population_df.loc[region, 'population']
         region_df.loc[:, 'r0'] = r0_df.loc[region, start_date:end_date]
         region_df.loc[:, 'mortality_rate'] = pre_dict[region].loc[start_date:end_date, 'deaths'] / region_population
-        save_sird_initial_info(region_df, country, region)
+        save_sird_initial_info(pre_info, region_df, country, region)
