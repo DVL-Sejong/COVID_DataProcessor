@@ -143,8 +143,8 @@ def save_I_df(country, pre_info, I_df):
     print(f'saving I_df to {saving_path}')
 
 
-def save_sird_initial_info(initial_df, country, region):
-    initial_path = join(RESULT_PATH, 'SIRD', get_country_name(country), 'Initial_values')
+def save_sird_initial_info(pre_info, initial_df, country, region):
+    initial_path = join(RESULT_PATH, 'SIRD', get_country_name(country), pre_info.get_hash(), 'Initial_values')
     Path(initial_path).mkdir(parents=True, exist_ok=True)
     saving_path = join(initial_path, f'{region}.csv')
     initial_df.to_csv(saving_path)
