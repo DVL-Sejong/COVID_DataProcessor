@@ -1,5 +1,5 @@
 from COVID_DataProcessor.datatype import Country
-from COVID_DataProcessor.io import load_links, load_regions, save_raw_file, save_origin_data
+from COVID_DataProcessor.io import load_links, load_regions, save_raw_file, save_origin_data, load_raw_data
 from COVID_DataProcessor.util import get_period
 from datetime import datetime, timedelta
 
@@ -16,21 +16,95 @@ def download_raw_file(link):
     return record_df
 
 
-def download_origin_data(country):
-    link_df = load_links(country)
+def download_raw_data(country):
+    data_info = load_links(country)
 
     if country == Country.US:
-        download_us_origin_data(link_df)
+        raw_dict = download_us_raw_data(data_info)
     elif country == Country.CHINA:
-        download_china_origin_data(link_df)
+        raw_dict = download_china_raw_data(data_info)
     elif country == Country.ITALY:
-        download_italy_origin_data(link_df)
+        raw_dict = download_italy_raw_data(data_info)
     elif country == Country.INDIA:
-        download_india_origin_data(link_df)
+        raw_dict = download_india_raw_data(data_info)
     elif country == Country.US_CONFIRMED:
-        download_us_confirmed_origin_data(link_df)
+        raw_dict = download_us_confirmed_raw_data(data_info)
     else:
         raise Exception(f'not registered country, {country}')
+
+    return raw_dict
+
+
+def get_origin_data(country):
+    data_info = load_links(country)
+
+    if country == Country.US:
+        origin_dict = get_us_origin_data(data_info)
+    elif country == Country.CHINA:
+        origin_dict = get_china_origin_data(data_info)
+    elif country == Country.ITALY:
+        origin_dict = get_italy_origin_data(data_info)
+    elif country == Country.INDIA:
+        origin_dict = get_india_origin_data(data_info)
+    elif country == Country.US_CONFIRMED:
+        origin_dict = get_us_confirmed_origin_data()
+    else:
+        raise Exception(f'not registered country, {country}')
+
+    return origin_dict
+
+
+def download_us_raw_data(data_info):
+    query_period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%m-%d-%Y')
+
+    raw_dict = dict()
+    for i, date in enumerate(query_period):
+        print(f'download US raw data on {date}')
+
+        link = data_info['link']
+        raw_df = download_raw_file(f'{link}{date}.csv')
+        save_raw_file(Country.US, raw_df, date)
+        raw_dict.update({date: raw_df})
+
+    return raw_dict
+
+
+def download_csse_raw_data(raw_dict, country_name, link, start_date, end_date):
+    query_period = get_period(start_date, end_date, out_date_format='%m-%d-%Y')
+    for i, date in enumerate(query_period):
+        print(f'download {country_name} raw data on {date}')
+        raw_df = download_raw_file(f'{link}{date}.csv')
+        save_raw_file(Country.CHINA, raw_df, date)
+        raw_dict.update({date: raw_df})
+
+    return raw_dict
+
+
+def download_china_raw_data(data_info):
+    raw_dict = dict()
+    raw_dict = download_csse_raw_data(raw_dict, 'Mainland China', data_info['link'],
+                                      data_info['start_date'], '2020-03-21')
+    raw_dict = download_csse_raw_data(raw_dict, 'China', data_info['link'],
+                                      '2020-03-22', data_info['end_date'])
+    return raw_dict
+
+
+def download_italy_raw_data(data_info):
+    raw_df = download_raw_file(data_info['link'])
+    raw_dict = {data_info['country']: raw_df}
+    return raw_dict
+
+
+def download_india_raw_data(data_info):
+    raw_df = download_raw_file(data_info['link'])
+    raw_dict = {data_info['country']: raw_df}
+    return raw_dict
+
+
+def download_us_confirmed_raw_data(data_info):
+    raw_df = download_raw_file(data_info['link'])
+    raw_dict = {data_info['country']: raw_df}
+    return raw_dict
 
 
 def get_empty_df_dict(data_info):
@@ -47,20 +121,18 @@ def get_empty_df_dict(data_info):
     return df_dict
 
 
-def download_us_origin_data(data_info):
+def get_us_origin_data(data_info):
     country = Country[data_info.name.upper()]
     regions = load_regions(country)
     df_dict = get_empty_df_dict(data_info)
+    raw_dict = load_raw_data(country)
 
-    query_period = get_period(data_info['start_date'], data_info['end_date'],  out_date_format='%m-%d-%Y')
+    query_period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%m-%d-%Y')
     index_period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%Y-%m-%d')
 
     for i, date in enumerate(query_period):
-        print(f'download US raw data on {index_period[i]}')
-
-        link = data_info['link']
-        raw_df = download_raw_file(f'{link}{date}.csv')
-        save_raw_file(country, raw_df, date)
+        print(f'get US origin data on {index_period[i]}')
+        raw_df = raw_dict[date]
 
         for region in regions:
             region_df = raw_df.loc[raw_df['Province_State'] == region]
@@ -70,12 +142,13 @@ def download_us_origin_data(data_info):
             df_dict[region].loc[index_period[i], 'active'] = region_df['Active'].sum(skipna=True)
 
     save_origin_data(country, df_dict)
+    return df_dict
 
 
-def download_us_confirmed_origin_data(data_info):
+def get_us_confirmed_origin_data():
     country = Country.US_CONFIRMED
-    raw_df = download_raw_file(data_info['link'])
-    save_raw_file(country, raw_df, country.name)
+    raw_dict = load_raw_data(country)
+    raw_df = raw_dict[raw_dict.keys()[0]]
 
     regions = load_regions(country)
     tmp_region_df = raw_df.loc[raw_df['Province_State'] == regions[0]]
@@ -98,17 +171,15 @@ def download_us_confirmed_origin_data(data_info):
 
     origin_dict = {country.name: origin_df}
     save_origin_data(country, origin_dict)
+    return origin_dict
 
 
-def download_csse_raw_data(df_dict, country_name, regions, link, start_date, end_date, country_column, state_column):
+def get_china_origin_dict(raw_dict, df_dict, country_name, regions, start_date, end_date, country_column, state_column):
     query_period = get_period(start_date, end_date, out_date_format='%m-%d-%Y')
     index_period = get_period(start_date, end_date, out_date_format='%Y-%m-%d')
 
     for i, date in enumerate(query_period):
-        print(f'download {country_name} raw data on {index_period[i]}')
-        raw_df = download_raw_file(f'{link}{date}.csv')
-        save_raw_file(Country.CHINA, raw_df, date)
-
+        raw_df = raw_dict[date]
         country_df = raw_df.loc[raw_df[country_column] == country_name]
 
         for region in regions:
@@ -126,27 +197,29 @@ def download_csse_raw_data(df_dict, country_name, regions, link, start_date, end
     return df_dict
 
 
-def download_china_origin_data(data_info):
+def get_china_origin_data(data_info):
     country = Country[data_info.name.upper()]
     regions = load_regions(country)
+    raw_dict = load_raw_data(country)
 
     df_dict = get_empty_df_dict(data_info)
-    df_dict = download_csse_raw_data(df_dict, 'Mainland China', regions, data_info['link'],
-                                     data_info['start_date'], '2020-03-21', 'Country/Region', 'Province/State')
-    df_dict = download_csse_raw_data(df_dict, 'China', regions, data_info['link'],
-                                     '2020-03-22', data_info['end_date'], 'Country_Region', 'Province_State')
+    df_dict = get_china_origin_dict(raw_dict, df_dict, 'Mainland China', regions,
+                                    data_info['start_date'], '2020-03-21', 'Country/Region', 'Province/State')
+    df_dict = get_china_origin_dict(raw_dict, df_dict, 'China', regions,
+                                    '2020-03-22', data_info['end_date'], 'Country_Region', 'Province_State')
 
     save_origin_data(country, df_dict)
+    return df_dict
 
 
-def download_italy_origin_data(data_info):
+def get_italy_origin_data(data_info):
     country = Country[data_info.name.upper()]
     regions = load_regions(country)
     df_dict = get_empty_df_dict(data_info)
     period = get_period(data_info['start_date'], data_info['end_date'])
 
-    raw_df = download_raw_file(data_info['link'])
-    save_raw_file(country, raw_df, 'Italy')
+    raw_dict = load_raw_data(country)
+    raw_df = raw_dict[raw_dict.keys()[0]]
     raw_df['data'] = pd.to_datetime(raw_df['data'], format='%Y-%m-%dT%H:%M:%S')
 
     for i, date in enumerate(period):
@@ -165,16 +238,17 @@ def download_italy_origin_data(data_info):
                                                       - region_df['dimessi_guariti'].values[0]
 
     save_origin_data(country, df_dict)
+    return df_dict
 
 
-def download_india_origin_data(data_info):
+def get_india_origin_data(data_info):
     country = Country[data_info.name.upper()]
     regions = load_regions(country)
     df_dict = get_empty_df_dict(data_info)
     period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%Y-%m-%d')
 
-    raw_df = download_raw_file(data_info['link'])
-    save_raw_file(country, raw_df, 'India')
+    raw_dict = load_raw_data(country)
+    raw_df = raw_dict[raw_dict.keys()[0]]
 
     for date in period:
         date_df = raw_df.loc[raw_df['Date'] == date]
@@ -193,8 +267,9 @@ def download_india_origin_data(data_info):
                                                   - region_df['Recovered'].values[0]
 
     save_origin_data(country, df_dict)
+    return df_dict
 
 
 if __name__ == '__main__':
-    country = Country.US_CONFIRMED
-    download_origin_data(country)
+    country = Country.CHINA
+    get_origin_data(country)

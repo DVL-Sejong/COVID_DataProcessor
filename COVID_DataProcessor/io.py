@@ -36,6 +36,20 @@ def load_regions(country):
     return regions
 
 
+def load_raw_data(country):
+    raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
+    raw_path_list = glob(join(raw_path, '*.csv'))
+
+    raw_dict = dict()
+    for file_path in raw_path_list:
+        _, file_name = split(file_path)
+        file_name = file_name.split('.csv')[0]
+        raw_df = pd.read_csv(file_path)
+        raw_dict.update({file_name: raw_df})
+
+    return raw_dict
+
+
 def load_origin_data(country):
     origin_path = join(DATASET_PATH, get_country_name(country), 'origin_data')
     regions = load_regions(country)
