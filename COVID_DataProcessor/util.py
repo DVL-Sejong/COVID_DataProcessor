@@ -18,12 +18,12 @@ def get_period(start_date, end_date, out_date_format=None):
 
 
 def get_date_format(date: str) -> str:
-    formats = ['%Y-%m-%d', '%y%m%d', '%m-%d-%Y']
+    formats = ['%Y-%m-%d', '%y%m%d', '%m-%d-%Y', '%m/%d/%y']
     for format in formats:
         if validate(date, format):
             return format
 
-    raise Exception(f'date {date} is not datetime type')
+    return ''
 
 
 def validate(date: str, format: str) -> bool:
@@ -47,8 +47,8 @@ def get_common_dates(dates1, dates2):
     common_dates = get_period(start_date, end_date, out_date_format='%Y-%m-%d')
     return common_dates
 
+
 if __name__ == '__main__':
-    start_date = '2020-01-01'
-    end_date = '2020-01-05'
-    period = get_period(start_date, end_date, out_date_format='%m-%d-%Y')
-    print(period)
+    target_date = '1/1/20'
+    format =get_date_format(target_date)
+    print(format)

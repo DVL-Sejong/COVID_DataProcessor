@@ -11,6 +11,7 @@ class Country(Enum):
     INDIA = 1
     ITALY = 2
     US = 3
+    US_CONFIRMED = 4
 
 
 @dataclass
@@ -238,7 +239,7 @@ class DatasetInfo:
 
 
 def get_country_name(country):
-    if country == Country.US:
+    if country == Country.US or country == Country.US_CONFIRMED:
         return country.name
     else:
         return country.name.capitalize()

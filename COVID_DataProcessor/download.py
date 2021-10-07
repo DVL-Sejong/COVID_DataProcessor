@@ -1,10 +1,12 @@
-from COVID_DataProcessor.util import *
-from COVID_DataProcessor.io import *
+from COVID_DataProcessor.datatype import Country
+from COVID_DataProcessor.io import load_links, load_regions, save_raw_file, save_origin_data
+from COVID_DataProcessor.util import get_period
 from datetime import datetime, timedelta
 
 import pandas as pd
 import requests
 import io
+import re
 
 
 def download_raw_file(link):
@@ -25,6 +27,8 @@ def download_origin_data(country):
         download_italy_origin_data(link_df)
     elif country == Country.INDIA:
         download_india_origin_data(link_df)
+    elif country == Country.US_CONFIRMED:
+        download_us_confirmed_origin_data(link_df)
     else:
         raise Exception(f'not registered country, {country}')
 
@@ -66,6 +70,34 @@ def download_us_origin_data(data_info):
             df_dict[region].loc[index_period[i], 'active'] = region_df['Active'].sum(skipna=True)
 
     save_origin_data(country, df_dict)
+
+
+def download_us_confirmed_origin_data(data_info):
+    country = Country.US_CONFIRMED
+    raw_df = download_raw_file(data_info['link'])
+    save_raw_file(country, raw_df, country.name)
+
+    regions = load_regions(country)
+    tmp_region_df = raw_df.loc[raw_df['Province_State'] == regions[0]]
+    date_columns = [col for col in tmp_region_df.columns.to_list() if re.search(r'\d+\/\d+\/\d+', col)]
+    new_columns = get_period(datetime.strptime(date_columns[0], '%m/%d/%y'),
+                             datetime.strptime(date_columns[-1], '%m/%d/%y'),
+                             out_date_format='%Y-%m-%d')
+
+    origin_df = pd.DataFrame(index=regions, columns=new_columns)
+    origin_df.index.name = 'regions'
+
+    for region in regions:
+        print(region)
+        region_df = raw_df.loc[raw_df['Province_State'] == region]
+
+        for date_column in date_columns:
+            date_datetime = datetime.strptime(date_column, '%m/%d/%y')
+            date_str = date_datetime.strftime('%Y-%m-%d')
+            origin_df.loc[region, date_str] = region_df[date_column].sum()
+
+    origin_dict = {country.name: origin_df}
+    save_origin_data(country, origin_dict)
 
 
 def download_csse_raw_data(df_dict, country_name, regions, link, start_date, end_date, country_column, state_column):
@@ -164,5 +196,5 @@ def download_india_origin_data(data_info):
 
 
 if __name__ == '__main__':
-    country = Country.INDIA
+    country = Country.US_CONFIRMED
     download_origin_data(country)

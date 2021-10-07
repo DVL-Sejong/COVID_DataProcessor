@@ -183,4 +183,3 @@ if __name__ == '__main__':
 
     sird_dict = convert_columns_to_sird(preprocessed_dict, pre_info, population_df)
     save_sird_dict(country, pre_info, sird_dict)
-
