@@ -3,3 +3,4 @@ US,https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_1
 India,https://api.covid19india.org/csv/latest/states.csv,2020-01-30,2021-09-29,TRUE
 Italy,https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv,2020-02-24,2021-09-29,TRUE
 China,https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/,2020-01-22,2021-08-04,FALSE
+US_CONFIRMED,https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv,,,TRUE
