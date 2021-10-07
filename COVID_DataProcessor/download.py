@@ -230,12 +230,12 @@ def get_italy_origin_data(data_info):
 
         for region in regions:
             region_df = date_df.loc[date_df['denominazione_regione'] == region]
-            df_dict[region].loc[date_str, 'confirmed'] = region_df['totale_casi'].values[0]
-            df_dict[region].loc[date_str, 'deaths'] = region_df['deceduti'].values[0]
-            df_dict[region].loc[date_str, 'recovered'] = region_df['dimessi_guariti'].values[0]
-            df_dict[region].loc[date_str, 'active'] = region_df['totale_casi'].values[0] \
-                                                      - region_df['deceduti'].values[0] \
-                                                      - region_df['dimessi_guariti'].values[0]
+            df_dict[region].loc[date_str, 'confirmed'] = region_df['totale_casi'].sum()
+            df_dict[region].loc[date_str, 'deaths'] = region_df['deceduti'].sum()
+            df_dict[region].loc[date_str, 'recovered'] = region_df['dimessi_guariti'].sum()
+            df_dict[region].loc[date_str, 'active'] = region_df['totale_casi'].sum() \
+                                                      - region_df['deceduti'].sum() \
+                                                      - region_df['dimessi_guariti'].sum()
 
     save_origin_data(country, df_dict)
     return df_dict
@@ -259,12 +259,12 @@ def get_india_origin_data(data_info):
                 df_dict[region].loc[date, :] = 0
                 continue
 
-            df_dict[region].loc[date, 'confirmed'] = region_df['Confirmed'].values[0]
-            df_dict[region].loc[date, 'deaths'] = region_df['Deceased'].values[0]
-            df_dict[region].loc[date, 'recovered'] = region_df['Recovered'].values[0]
-            df_dict[region].loc[date, 'active'] = region_df['Confirmed'].values[0] \
-                                                  - region_df['Deceased'].values[0] \
-                                                  - region_df['Recovered'].values[0]
+            df_dict[region].loc[date, 'confirmed'] = region_df['Confirmed'].sum()
+            df_dict[region].loc[date, 'deaths'] = region_df['Deceased'].sum()
+            df_dict[region].loc[date, 'recovered'] = region_df['Recovered'].sum()
+            df_dict[region].loc[date, 'active'] = region_df['Confirmed'].sum() \
+                                                  - region_df['Deceased'].sum() \
+                                                  - region_df['Recovered'].sum()
 
     save_origin_data(country, df_dict)
     return df_dict
