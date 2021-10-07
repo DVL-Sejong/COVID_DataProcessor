@@ -1,9 +1,23 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo
 from COVID_DataProcessor.io import load_links, load_origin_data, load_population
 from COVID_DataProcessor.io import save_setting, save_preprocessed_dict, save_sird_dict
+from copy import copy
 
 import pandas as pd
 import numpy as np
+
+
+def preprocess_test_number(test_num_df, window):
+    regions = test_num_df.index.tolist()
+
+    for region in regions:
+        target_value = target_to_daily(test_num_df.loc[region, :].to_list())
+        target_value = make_zero_and_negative_removed(target_value)
+        if window > 0:
+            target_value = smooth(target_value, window)
+        test_num_df.loc[region, :] = target_value
+
+    return test_num_df
 
 
 def preprocess(parsed_df, population, pre_info):
@@ -70,19 +84,12 @@ def dataset_to_increased(target_df, targets):
 
 
 def cumulated_to_daily(target_df, targets):
-    dates = target_df.index.to_list()
-
     preprocessed_df = target_df.copy(deep=True)
+
     for target in targets:
         target_values = preprocessed_df[target].to_list()
-
-        daily_values = []
+        daily_values = target_to_daily(target_values)
         daily_values.append(target_values[0])
-
-        for i in range(len(dates) - 1):
-            daily_values.append(target_values[i + 1] - target_values[i])
-
-        preprocessed_df[target] = daily_values
 
     return preprocessed_df
 
@@ -129,6 +136,16 @@ def target_to_increased(target_values):
     return target_values
 
 
+def target_to_daily(target_values):
+    daily_values = []
+    daily_values.append(target_values[0])
+
+    for i in range(len(target_values) - 1):
+        daily_values.append(target_values[i + 1] - target_values[i])
+
+    return daily_values
+
+
 def get_max_index(region_values, broken_index):
     start_value = region_values[broken_index - 1]
 
@@ -142,6 +159,8 @@ def get_max_index(region_values, broken_index):
 
 
 def interpolate(region_values, start_index, end_index):
+    region_values = copy(region_values)
+
     if end_index == -1:
         tail_len = len(region_values[start_index:])
         tail = [region_values[start_index] for i in range(tail_len)]
@@ -157,6 +176,28 @@ def interpolate(region_values, start_index, end_index):
         step += 1
 
     return region_values
+
+
+def make_zero_and_negative_removed(target_values):
+    target_values = copy(target_values)
+
+    for i, value in enumerate(target_values):
+        if i == 0: continue
+        if target_values[i-1] <= 0 or value > 0: continue
+
+        max_index = -1
+        for j in range(i + 1, len(target_values) - 1):
+            if target_values[j] > 0:
+                max_index = j
+                break
+
+        if max_index != -1:
+            target_values = interpolate(target_values, i - 1, max_index)
+        else:
+            target_values[i:] = [target_values[i-1] for _ in range(len(target_values[i:]))]
+            break
+
+    return target_values
 
 
 def get_preprocessed_dict(country, pre_info):

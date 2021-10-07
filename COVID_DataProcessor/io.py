@@ -33,7 +33,22 @@ def load_population(country):
 def load_regions(country):
     population_df = load_population(country)
     regions = population_df.index.tolist()
+    regions.sort()
     return regions
+
+
+def load_raw_data(country):
+    raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
+    raw_path_list = glob(join(raw_path, '*.csv'))
+
+    raw_dict = dict()
+    for file_path in raw_path_list:
+        _, file_name = split(file_path)
+        file_name = file_name.split('.csv')[0]
+        raw_df = pd.read_csv(file_path)
+        raw_dict.update({file_name: raw_df})
+
+    return raw_dict
 
 
 def load_origin_data(country):
@@ -170,6 +185,14 @@ def save_first_confirmed_date(country, first_confirmed_date_df):
     saving_path = join(first_date_path, 'first_confirmed_date.csv')
     first_confirmed_date_df.to_csv(saving_path)
     print(f'saving first confirmed date of {country.name} to {saving_path}')
+
+
+def save_test_number(country, test_num_df):
+    test_number_path = join(RESULT_PATH, 'SIRD', get_country_name(country))
+    Path(test_number_path).mkdir(parents=True, exist_ok=True)
+    saving_path = join(test_number_path, 'number_of_tests.csv')
+    test_num_df.to_csv(saving_path)
+    print(f'saving data of number of tests in {country.name} to {saving_path}')
 
 
 def save_setting(param_class, class_name):
