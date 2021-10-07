@@ -1,5 +1,6 @@
-from COVID_DataProcessor.util import *
-from COVID_DataProcessor.io import *
+from COVID_DataProcessor.datatype import Country
+from COVID_DataProcessor.io import load_links, load_regions, save_raw_file, save_origin_data
+from COVID_DataProcessor.util import get_period
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -74,7 +75,7 @@ def download_us_origin_data(data_info):
 def download_us_confirmed_origin_data(data_info):
     country = Country.US_CONFIRMED
     raw_df = download_raw_file(data_info['link'])
-    # save_raw_file(country, raw_df, country.name)
+    save_raw_file(country, raw_df, country.name)
 
     regions = load_regions(country)
     tmp_region_df = raw_df.loc[raw_df['Province_State'] == regions[0]]

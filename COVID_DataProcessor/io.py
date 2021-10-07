@@ -48,6 +48,19 @@ def load_origin_data(country):
     return data_dict
 
 
+def load_us_confirmed_data():
+    origin_path = join(DATASET_PATH, get_country_name(Country.US_CONFIRMED), 'origin_data')
+    saving_path = join(origin_path, 'US_CONFIRMED.csv')
+    us_confirmed_df = pd.read_csv(saving_path, index_col='regions')
+    return us_confirmed_df
+
+
+def load_first_confirmed_date(country):
+    first_date_path = join(RESULT_PATH, 'SIRD', get_country_name(country), 'first_confirmed_date.csv')
+    first_confirmed_date_df = pd.read_csv(first_date_path, index_col='regions')
+    return first_confirmed_date_df
+
+
 def load_preprocessed_data(country, pre_info):
     pre_path = join(DATASET_PATH, get_country_name(country), pre_info.get_hash())
     regions = load_regions(country)
@@ -106,7 +119,7 @@ def save_raw_file(country, raw_df, name):
     raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
     Path(raw_path).mkdir(parents=True, exist_ok=True)
 
-    raw_df.to_csv(join(raw_path, f'{name}.csv'))
+    raw_df.to_csv(join(raw_path, f'{name}.csv'), index=False)
     print(f'saving raw file to {raw_path}')
 
 
@@ -149,6 +162,14 @@ def save_sird_initial_info(pre_info, initial_df, country, region):
     saving_path = join(initial_path, f'{region}.csv')
     initial_df.to_csv(saving_path)
     print(f'saving {region} initial value to {saving_path}')
+
+
+def save_first_confirmed_date(country, first_confirmed_date_df):
+    first_date_path = join(RESULT_PATH, 'SIRD', get_country_name(country))
+    Path(first_date_path).mkdir(parents=True, exist_ok=True)
+    saving_path = join(first_date_path, 'first_confirmed_date.csv')
+    first_confirmed_date_df.to_csv(saving_path)
+    print(f'saving first confirmed date of {country.name} to {saving_path}')
 
 
 def save_setting(param_class, class_name):

@@ -1,5 +1,5 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo, DatasetInfo
-from COVID_DataProcessor.io import load_links, save_setting, load_I_df, save_I_df
+from COVID_DataProcessor.io import load_links, load_I_df
 
 from datetime import timedelta
 
