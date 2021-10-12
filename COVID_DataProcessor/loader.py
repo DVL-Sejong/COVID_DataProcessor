@@ -36,8 +36,9 @@ if __name__ == '__main__':
     country = Country.ITALY
     link_df = load_links(country)
 
-    pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, smoothing=True, window=5, divide=True)
+    pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+                              increase=True, daily=True, remove_zero=True,
+                              smoothing=True, window=5, divide=True)
     pre_hash = pre_info.get_hash()
 
     data_info = DatasetInfo(x_frames=15, y_frames=3,

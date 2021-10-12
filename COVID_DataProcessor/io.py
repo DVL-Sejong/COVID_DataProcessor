@@ -224,6 +224,7 @@ if __name__ == '__main__':
     link_df = load_links().loc['India', :]
     data_dict = load_origin_data(country)
     population_df = load_population(country)
-    pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, smoothing=True, window=5, divide=True)
+    pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+                              increase=True, daily=True, remove_zero=True,
+                              smoothing=True, window=5, divide=True)
     save_setting(pre_info, 'pre_info')

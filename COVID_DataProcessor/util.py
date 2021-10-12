@@ -50,5 +50,5 @@ def get_common_dates(dates1, dates2):
 
 if __name__ == '__main__':
     target_date = '1/1/20'
-    format =get_date_format(target_date)
+    format = get_date_format(target_date)
     print(format)
