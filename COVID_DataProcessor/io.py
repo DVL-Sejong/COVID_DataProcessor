@@ -187,8 +187,8 @@ def save_first_confirmed_date(country, first_confirmed_date_df):
     print(f'saving first confirmed date of {country.name} to {saving_path}')
 
 
-def save_test_number(country, test_num_df):
-    test_number_path = join(RESULT_PATH, 'SIRD', get_country_name(country))
+def save_test_number(country, pre_info, test_num_df):
+    test_number_path = join(RESULT_PATH, 'SIRD', get_country_name(country), pre_info.get_hash())
     Path(test_number_path).mkdir(parents=True, exist_ok=True)
     saving_path = join(test_number_path, 'number_of_tests.csv')
     test_num_df.to_csv(saving_path)

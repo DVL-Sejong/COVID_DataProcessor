@@ -7,15 +7,23 @@ import pandas as pd
 import numpy as np
 
 
-def preprocess_test_number(test_num_df, window):
+def preprocess_test_number(test_num_df, pre_info):
     regions = test_num_df.index.tolist()
 
     for region in regions:
-        target_value = target_to_daily(test_num_df.loc[region, :].to_list())
-        target_value = make_zero_and_negative_removed(target_value)
-        if window > 0:
-            target_value = smooth(target_value, window)
+        target_value = test_num_df.loc[region, :].to_list()
+        if pre_info.daily:
+            target_value = target_to_daily(target_value)
+        if pre_info.remove_zero:
+            target_value = make_zero_and_negative_removed(target_value)
+            target_value = remove_target_zeros(target_value)
+        if pre_info.smoothing:
+            target_value = smooth(target_value, pre_info.window)
+
         test_num_df.loc[region, :] = target_value
+
+    if pre_info.smoothing:
+        test_num_df = test_num_df.iloc[:, pre_info.window:]
 
     return test_num_df
 
@@ -253,7 +261,7 @@ if __name__ == '__main__':
 
     pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=True, remove_zero=True,
-                              smoothing=True, window=5, divide=False)
+                              smoothing=True, window=9, divide=False)
 
     preprocessed_dict = get_preprocessed_dict(country, pre_info)
 
