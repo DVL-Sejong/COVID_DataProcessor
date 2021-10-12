@@ -89,7 +89,7 @@ def cumulated_to_daily(target_df, targets):
     for target in targets:
         target_values = preprocessed_df[target].to_list()
         daily_values = target_to_daily(target_values)
-        daily_values.append(target_values[0])
+        preprocessed_df.loc[:, target] = daily_values
 
     return preprocessed_df
 
@@ -213,12 +213,12 @@ def get_preprocessed_dict(country, pre_info):
 
 
 if __name__ == '__main__':
-    country = Country.ITALY
+    country = Country.US
     link_df = load_links(country)
     population_df = load_population(country)
 
     pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, smoothing=True, window=5, divide=True)
+                              increase=True, daily=True, smoothing=True, window=9, divide=False)
 
     preprocessed_dict = get_preprocessed_dict(country, pre_info)
 
