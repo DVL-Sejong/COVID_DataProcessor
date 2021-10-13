@@ -1,5 +1,6 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo, get_country_name
-from COVID_DataProcessor.io import load_sird_dict, load_r0_df, load_us_confirmed_data, load_preprocessed_data
+from COVID_DataProcessor.io import load_sird_dict, load_r0_df, load_us_confirmed_data, load_preprocessed_data, \
+    save_setting
 from COVID_DataProcessor.io import load_links, load_raw_data, save_test_number
 from COVID_DataProcessor.io import save_sird_initial_info, save_first_confirmed_date
 from COVID_DataProcessor.io import load_population, load_regions, load_origin_data
@@ -81,6 +82,10 @@ def get_first_confirmed_date(country):
 
 
 def get_test_number(country, pre_info):
+    if pre_info.increase:
+        pre_info.increase = False
+    save_setting(pre_info, 'pre_info')
+
     if country == Country.US:
         test_num_df = get_test_number_of_us(country, pre_info)
     elif country == Country.ITALY:
@@ -178,6 +183,6 @@ if __name__ == '__main__':
 
     pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                               increase=False, daily=True, remove_zero=True,
-                              smoothing=True, window=5, divide=False)
+                              smoothing=True, window=9, divide=False)
 
     test_num_df = get_test_number(country, pre_info)
