@@ -1,12 +1,16 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 
 def get_period(start_date, end_date, out_date_format=None):
     if type(start_date) == str:
         start_date = datetime.strptime(start_date, get_date_format(start_date))
+    if type(start_date) == date:
+        start_date = convert_date_to_datetime(start_date)
 
     if type(end_date) == str:
         end_date = datetime.strptime(end_date, get_date_format(end_date))
+    if type(end_date) == date:
+        end_date = convert_date_to_datetime(end_date)
 
     duration = (end_date - start_date).days + 1
     period = [start_date + timedelta(days=i) for i in range(duration)]
@@ -33,6 +37,10 @@ def validate(date: str, format: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def convert_date_to_datetime(target_date):
+    return datetime(year=target_date.year, month=target_date.month, day=target_date.day)
 
 
 def get_common_dates(dates1, dates2):

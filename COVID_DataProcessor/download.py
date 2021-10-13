@@ -219,7 +219,7 @@ def get_italy_origin_data(data_info):
     period = get_period(data_info['start_date'], data_info['end_date'])
 
     raw_dict = load_raw_data(country)
-    raw_df = raw_dict[raw_dict.keys()[0]]
+    raw_df = raw_dict[list(raw_dict.keys())[0]]
     raw_df['data'] = pd.to_datetime(raw_df['data'], format='%Y-%m-%dT%H:%M:%S')
 
     for i, date in enumerate(period):
@@ -271,5 +271,5 @@ def get_india_origin_data(data_info):
 
 
 if __name__ == '__main__':
-    country = Country.CHINA
+    country = Country.ITALY
     get_origin_data(country)
