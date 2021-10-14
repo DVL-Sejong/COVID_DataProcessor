@@ -16,6 +16,8 @@ class Country(Enum):
 
 @dataclass
 class PreprocessInfo:
+    country: Country = None
+    _country: Country = field(init=False, repr=False)
     start: datetime = None
     _start: datetime = field(init=False, repr=False)
     end: datetime = None
@@ -24,6 +26,8 @@ class PreprocessInfo:
     _increase: bool = field(default=True)
     daily: bool = None
     _daily: bool = field(default=False)
+    remove_zero: bool = None
+    _remove_zero: bool = field(default=False)
     smoothing: bool = None
     _smoothing: bool = field(default=False)
     window: int = None
@@ -31,20 +35,32 @@ class PreprocessInfo:
     divide: bool = None
     _divide: bool = field(default=True)
 
-    def __init__(self, start, end, increase: bool, daily: bool, smoothing: bool, window: int, divide: bool):
+    def __init__(self, country, start, end,
+                 increase: bool, daily: bool, remove_zero: bool,
+                 smoothing: bool, window: int, divide: bool):
+        self.country = country
         self.start = start
         self.end = end
         self.increase = increase
         self.daily = daily
+        self.remove_zero = remove_zero
         self.smoothing = smoothing
         self.window = window
         self.divide = divide
 
     def __repr__(self):
-        representation = f'PreprocessInfo(start: {self._start}, end: {self._end}, '
-        representation += f'increase: {self._increase}, daily: {self._daily}, '
+        representation = f'PreprocessInfo(country: {self._country.name}, start: {self._start}, end: {self._end}, '
+        representation += f'increase: {self._increase}, daily: {self._daily}, remove_zero: {self._remove_zero}, '
         representation += f'smoothing: {self._smoothing}, window: {self._window}, divide: {self._divide})'
         return representation
+
+    @property
+    def country(self) -> Country:
+        return self._country
+
+    @country.setter
+    def country(self, country: Country):
+        self._country = country
 
     @property
     def start(self):
@@ -115,6 +131,14 @@ class PreprocessInfo:
         self._daily = daily
 
     @property
+    def remove_zero(self) -> bool:
+        return self._remove_zero
+
+    @remove_zero.setter
+    def remove_zero(self, remove_zero: bool):
+        self._remove_zero = remove_zero
+
+    @property
     def smoothing(self) -> bool:
         return self._smoothing
 
@@ -124,11 +148,14 @@ class PreprocessInfo:
 
     @property
     def window(self) -> int:
-        return self._window
+       return self._window
 
     @window.setter
     def window(self, window: int):
-        self._window = window
+        if self._smoothing is False:
+            self._window = 0
+        else:
+            self._window = window
 
     @property
     def divide(self) -> bool:

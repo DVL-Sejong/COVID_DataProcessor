@@ -187,8 +187,8 @@ def save_first_confirmed_date(country, first_confirmed_date_df):
     print(f'saving first confirmed date of {country.name} to {saving_path}')
 
 
-def save_test_number(country, test_num_df):
-    test_number_path = join(RESULT_PATH, 'SIRD', get_country_name(country))
+def save_test_number(country, pre_info, test_num_df):
+    test_number_path = join(RESULT_PATH, 'SIRD', get_country_name(country), pre_info.get_hash())
     Path(test_number_path).mkdir(parents=True, exist_ok=True)
     saving_path = join(test_number_path, 'number_of_tests.csv')
     test_num_df.to_csv(saving_path)
@@ -224,6 +224,7 @@ if __name__ == '__main__':
     link_df = load_links().loc['India', :]
     data_dict = load_origin_data(country)
     population_df = load_population(country)
-    pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, smoothing=True, window=5, divide=True)
+    pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+                              increase=True, daily=True, remove_zero=True,
+                              smoothing=True, window=5, divide=True)
     save_setting(pre_info, 'pre_info')

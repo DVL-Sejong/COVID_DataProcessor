@@ -7,15 +7,23 @@ import pandas as pd
 import numpy as np
 
 
-def preprocess_test_number(test_num_df, window):
+def preprocess_test_number(test_num_df, pre_info):
     regions = test_num_df.index.tolist()
 
     for region in regions:
-        target_value = target_to_daily(test_num_df.loc[region, :].to_list())
-        target_value = make_zero_and_negative_removed(target_value)
-        if window > 0:
-            target_value = smooth(target_value, window)
+        target_value = test_num_df.loc[region, :].to_list()
+        if pre_info.daily:
+            target_value = target_to_daily(target_value)
+        if pre_info.remove_zero:
+            target_value = make_zero_and_negative_removed(target_value)
+            target_value = remove_target_zeros(target_value)
+        if pre_info.smoothing:
+            target_value = smooth(target_value, pre_info.window)
+
         test_num_df.loc[region, :] = target_value
+
+    if pre_info.smoothing:
+        test_num_df = test_num_df.iloc[:, pre_info.window:]
 
     return test_num_df
 
@@ -25,6 +33,8 @@ def preprocess(parsed_df, population, pre_info):
         parsed_df = dataset_to_increased(parsed_df, targets=['confirmed', 'deaths', 'recovered'])
     if pre_info.daily:
         parsed_df = cumulated_to_daily(parsed_df, targets=['confirmed', 'deaths', 'recovered'])
+    if pre_info.remove_zero:
+        parsed_df = remove_zero_period(parsed_df, targets=['recovered'])
     if pre_info.smoothing:
         parsed_df = apply_moving_average(parsed_df, targets=['confirmed', 'deaths', 'recovered', 'active'], window=pre_info.window)
     if pre_info.divide:
@@ -89,7 +99,7 @@ def cumulated_to_daily(target_df, targets):
     for target in targets:
         target_values = preprocessed_df[target].to_list()
         daily_values = target_to_daily(target_values)
-        daily_values.append(target_values[0])
+        preprocessed_df.loc[:, target] = daily_values
 
     return preprocessed_df
 
@@ -103,6 +113,38 @@ def apply_moving_average(target_df, targets, window):
         preprocessed_df[target] = smoothed
 
     return preprocessed_df
+
+
+def remove_zero_period(target_df, targets):
+    preprocessed_df = target_df.copy(deep=True)
+
+    for target in targets:
+        target_values = preprocessed_df[target].to_list()
+        daily_values = remove_target_zeros(target_values)
+        preprocessed_df.loc[:, target] = daily_values
+
+    return preprocessed_df
+
+
+def remove_target_zeros(target_values):
+    for i in range(1, len(target_values)):
+        if target_values[i - 1] == 0 or target_values[i] != 0:
+            continue
+
+        max_index = get_nonzero_index(target_values, i)
+        target_values = interpolate(target_values, i - 1, max_index)
+
+    return target_values
+
+
+def get_nonzero_index(region_values, broken_index):
+    index = broken_index + 1
+    while index < len(region_values):
+        if region_values[index] > 0:
+            return index
+        index += 1
+
+    return -1
 
 
 def divide_by_population(target_df, population):
@@ -213,12 +255,13 @@ def get_preprocessed_dict(country, pre_info):
 
 
 if __name__ == '__main__':
-    country = Country.ITALY
+    country = Country.CHINA
     link_df = load_links(country)
     population_df = load_population(country)
 
-    pre_info = PreprocessInfo(start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, smoothing=True, window=5, divide=True)
+    pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+                              increase=True, daily=True, remove_zero=True,
+                              smoothing=True, window=9, divide=False)
 
     preprocessed_dict = get_preprocessed_dict(country, pre_info)
 

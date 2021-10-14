@@ -1,5 +1,6 @@
-from COVID_DataProcessor.datatype import Country
-from COVID_DataProcessor.io import load_sird_dict, load_r0_df, load_us_confirmed_data, load_preprocessed_data
+from COVID_DataProcessor.datatype import Country, PreprocessInfo, get_country_name
+from COVID_DataProcessor.io import load_sird_dict, load_r0_df, load_us_confirmed_data, load_preprocessed_data, \
+    save_setting
 from COVID_DataProcessor.io import load_links, load_raw_data, save_test_number
 from COVID_DataProcessor.io import save_sird_initial_info, save_first_confirmed_date
 from COVID_DataProcessor.io import load_population, load_regions, load_origin_data
@@ -80,26 +81,28 @@ def get_first_confirmed_date(country):
     return first_confirmed_date_df
 
 
-def get_test_number(country, window=5):
-    link_df = load_links(country)
+def get_test_number(country, pre_info):
+    if pre_info.increase:
+        pre_info.increase = False
+    save_setting(pre_info, 'pre_info')
 
     if country == Country.US:
-        test_num_df = get_test_number_of_us(link_df, window)
+        test_num_df = get_test_number_of_us(country, pre_info)
     elif country == Country.ITALY:
-        test_num_df = get_test_number_of_italy(link_df, window)
+        test_num_df = get_test_number_of_italy(country, pre_info)
     elif country == Country.INDIA:
-        test_num_df = get_test_number_of_india(link_df, window)
+        test_num_df = get_test_number_of_india(country, pre_info)
     else:
         raise Exception(f'not available country, {country}')
 
     return test_num_df
 
 
-def get_test_number_of_us(data_info, window=5):
-    raw_dict = load_raw_data(Country.US)
+def get_test_number_of_us(country, pre_info):
+    raw_dict = load_raw_data(country)
 
-    regions = load_regions(Country.US)
-    period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%Y-%m-%d')
+    regions = load_regions(country)
+    period = get_period(pre_info.start, pre_info.end, out_date_format='%Y-%m-%d')
 
     test_num_df = pd.DataFrame(index=regions, columns=period)
     test_num_df.index.name = 'regions'
@@ -117,17 +120,17 @@ def get_test_number_of_us(data_info, window=5):
             region_df = raw_df.loc[raw_df['Province_State'] == region]
             test_num_df.loc[region, date_str] = region_df[test_column].sum()
 
-    test_num_df = preprocess_test_number(test_num_df, window)
-    save_test_number(country, test_num_df)
+    test_num_df = preprocess_test_number(test_num_df, pre_info)
+    save_test_number(country, pre_info, test_num_df)
     return test_num_df
 
 
-def get_test_number_of_italy(data_info, window):
-    raw_df = load_raw_data(country)[data_info.name]
+def get_test_number_of_italy(country, pre_info):
+    raw_df = load_raw_data(country)[get_country_name(country)]
     raw_df['data'] = pd.to_datetime(raw_df['data'], format='%Y-%m-%dT%H:%M:%S')
 
     regions = load_regions(Country.ITALY)
-    period = get_period(data_info['start_date'], data_info['end_date'])
+    period = get_period(pre_info.start, pre_info.end)
     period_str = [elem.strftime('%Y-%m-%d') for elem in period]
 
     test_num_df = pd.DataFrame(index=regions, columns=period_str)
@@ -145,16 +148,16 @@ def get_test_number_of_italy(data_info, window):
             test_num_df.loc[region, period_str[i]] = region_df['casi_testati'].sum()
         print()
 
-    test_num_df = preprocess_test_number(test_num_df, window)
-    save_test_number(country, test_num_df)
+    test_num_df = preprocess_test_number(test_num_df, pre_info)
+    save_test_number(country, pre_info, test_num_df)
     return test_num_df
 
 
-def get_test_number_of_india(data_info, window=5):
-    raw_df = load_raw_data(country)[data_info.name]
+def get_test_number_of_india(country, pre_info):
+    raw_df = load_raw_data(country)[get_country_name(country)]
 
     regions = load_regions(Country.INDIA)
-    period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%Y-%m-%d')
+    period = get_period(pre_info.start, pre_info.end, out_date_format='%Y-%m-%d')
 
     test_num_df = pd.DataFrame(index=regions, columns=period)
     test_num_df.index.name = 'regions'
@@ -169,11 +172,17 @@ def get_test_number_of_india(data_info, window=5):
             test_num_df.loc[region:, date] = 0 if region_df.empty else region_df['Tested'].sum()
         print()
 
-    test_num_df = preprocess_test_number(test_num_df, window)
-    save_test_number(country, test_num_df)
+    test_num_df = preprocess_test_number(test_num_df, pre_info)
+    save_test_number(country, pre_info, test_num_df)
     return test_num_df
 
 
 if __name__ == '__main__':
     country = Country.US
-    test_num_df = get_test_number(country, window=0)
+    link_df = load_links(country)
+
+    pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+                              increase=False, daily=True, remove_zero=True,
+                              smoothing=True, window=9, divide=False)
+
+    test_num_df = get_test_number(country, pre_info)
