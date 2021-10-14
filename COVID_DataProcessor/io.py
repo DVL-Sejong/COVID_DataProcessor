@@ -157,8 +157,11 @@ def save_preprocessed_dict(country, pre_info, preprocessed_dict):
     save_dict(pre_path, preprocessed_dict, 'preprocessed')
 
 
-def save_sird_dict(country, pre_info, sird_dict):
-    sird_path = join(DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash())
+def save_sird_dict(country, pre_info, sird_dict, model=None):
+    if model is None:
+        sird_path = join(DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash())
+    else:
+        sird_path = join(RESULT_PATH, model, get_country_name(country), 'sird', pre_info.get_hash())
     Path(sird_path).mkdir(parents=True, exist_ok=True)
     save_dict(sird_path, sird_dict, 'SIRD')
 
@@ -188,11 +191,21 @@ def save_first_confirmed_date(country, first_confirmed_date_df):
 
 
 def save_test_number(country, pre_info, test_num_df):
-    test_number_path = join(RESULT_PATH, 'SIRD', get_country_name(country), pre_info.get_hash())
+    test_number_path = join(RESULT_PATH, 'SIRD', get_country_name(country), 'number_of_tests', pre_info.get_hash())
     Path(test_number_path).mkdir(parents=True, exist_ok=True)
     saving_path = join(test_number_path, 'number_of_tests.csv')
     test_num_df.to_csv(saving_path)
     print(f'saving data of number of tests in {country.name} to {saving_path}')
+
+
+def save_dataset_for_sird_model(country, dataset_dict):
+    dataset_path = join(RESULT_PATH, 'SIRD', get_country_name(country))
+    Path(dataset_path).mkdir(parents=True, exist_ok=True)
+    print(f'save dataset for sird model under {dataset_path}')
+    save_test_number(country, dataset_dict['test_info'], dataset_dict['test_num'])
+    save_sird_dict(country, dataset_dict['sird_info'], dataset_dict['sird_dict'], 'SIRD')
+    save_first_confirmed_date(country, dataset_dict['first_confirmed'])
+    dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))
 
 
 def save_setting(param_class, class_name):
