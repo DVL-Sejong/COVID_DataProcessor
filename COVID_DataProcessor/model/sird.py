@@ -1,9 +1,24 @@
-from COVID_DataProcessor.io import load_sird_dict, load_r0_df
+from COVID_DataProcessor.datatype import Country, PreprocessInfo
+from COVID_DataProcessor.io import load_sird_dict, load_r0_df, load_links
+from COVID_DataProcessor.io import save_infectious_period, save_dataset_for_sird_model
 from COVID_DataProcessor.io import save_sird_initial_info, load_population, load_regions
-from COVID_DataProcessor.util import get_common_dates
+from COVID_DataProcessor.preprocess.preprocess import get_sird_dict
+from COVID_DataProcessor.util import get_common_dates, generate_dataframe
 from copy import copy
 
 import pandas as pd
+
+
+def get_dataset_for_sird_model(country, sird_info):
+    period_df = get_infectious_period(country)
+    population_df = load_population(country)
+    initial_dict = get_initial_dict(country, sird_info)
+    sird_dict = get_sird_dict(country, sird_info)
+
+    dataset_dict = {'infectious_period': period_df, 'population': population_df,
+                    'initial_dict': initial_dict, 'sird_dict': sird_dict, 'sird_info': sird_info}
+    save_dataset_for_sird_model(country, dataset_dict)
+    return dataset_dict
 
 
 def get_initial_dict(country, pre_info):
@@ -35,6 +50,13 @@ def get_initial_dict(country, pre_info):
     return initial_dict
 
 
+def get_infectious_period(country):
+    period_df = generate_dataframe(load_regions(country), ['infectious_period'], 'regions')
+    period_df.loc[:, 'infectious_period'] = 5
+    save_infectious_period(country, period_df)
+    return period_df
+
+
 def get_sird_dict_for_mortality_rate(country, pre_info):
     new_info = copy(pre_info)
     new_info.divide = False
@@ -44,8 +66,19 @@ def get_sird_dict_for_mortality_rate(country, pre_info):
 
 
 def get_common_dates_between_dict_and_df(data_dict, data_df):
-    dict_dates = data_dict[data_dict.keys()[0]].index.tolist()
+    dict_dates = data_dict[next(iter(data_dict))].index.tolist()
     df_dates = data_df.columns.to_list()
 
     common_dates = get_common_dates(dict_dates, df_dates)
     return common_dates
+
+
+if __name__ == '__main__':
+    country = Country.INDIA
+    link_df = load_links(country)
+
+    sird_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+                               increase=True, daily=True, remove_zero=True,
+                               smoothing=True, window=5, divide=True)
+
+    dataset_dict = get_dataset_for_sird_model(country, sird_info)
