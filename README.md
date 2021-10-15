@@ -46,3 +46,9 @@ oregon
 CHINA
 
 나라 데이터 자체가 이상함
+
+
+
+### 처음 실행할 때
+
+download.py 실행 -> preprocess.py 실행 -> r0.py 실행

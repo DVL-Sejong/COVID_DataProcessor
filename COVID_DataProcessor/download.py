@@ -1,5 +1,6 @@
 from COVID_DataProcessor.datatype import Country
-from COVID_DataProcessor.io import load_links, load_regions, save_raw_file, save_origin_data, load_raw_data
+from COVID_DataProcessor.io import load_links, load_regions, save_raw_file, save_origin_data
+from COVID_DataProcessor.io import load_raw_data, save_raw_data
 from COVID_DataProcessor.util import get_period
 from datetime import datetime, timedelta
 
@@ -24,11 +25,11 @@ def download_raw_data(country):
     elif country == Country.CHINA:
         raw_dict = download_china_raw_data(data_info)
     elif country == Country.ITALY:
-        raw_dict = download_italy_raw_data(data_info)
+        raw_dict = download_national_raw_data(country, data_info)
     elif country == Country.INDIA:
-        raw_dict = download_india_raw_data(data_info)
+        raw_dict = download_national_raw_data(country, data_info)
     elif country == Country.US_CONFIRMED:
-        raw_dict = download_us_confirmed_raw_data(data_info)
+        raw_dict = download_national_raw_data(country, data_info)
     else:
         raise Exception(f'not registered country, {country}')
 
@@ -89,21 +90,10 @@ def download_china_raw_data(data_info):
     return raw_dict
 
 
-def download_italy_raw_data(data_info):
+def download_national_raw_data(country, data_info):
     raw_df = download_raw_file(data_info['link'])
-    raw_dict = {data_info['country']: raw_df}
-    return raw_dict
-
-
-def download_india_raw_data(data_info):
-    raw_df = download_raw_file(data_info['link'])
-    raw_dict = {data_info['country']: raw_df}
-    return raw_dict
-
-
-def download_us_confirmed_raw_data(data_info):
-    raw_df = download_raw_file(data_info['link'])
-    raw_dict = {data_info['country']: raw_df}
+    raw_dict = {data_info.name: raw_df}
+    save_raw_data(country, raw_dict)
     return raw_dict
 
 
@@ -148,7 +138,7 @@ def get_us_origin_data(data_info):
 def get_us_confirmed_origin_data():
     country = Country.US_CONFIRMED
     raw_dict = load_raw_data(country)
-    raw_df = raw_dict[raw_dict.keys()[0]]
+    raw_df = raw_dict[next(iter(raw_dict))]
 
     regions = load_regions(country)
     tmp_region_df = raw_df.loc[raw_df['Province_State'] == regions[0]]
@@ -219,7 +209,7 @@ def get_italy_origin_data(data_info):
     period = get_period(data_info['start_date'], data_info['end_date'])
 
     raw_dict = load_raw_data(country)
-    raw_df = raw_dict[list(raw_dict.keys())[0]]
+    raw_df = raw_dict[next(iter(raw_dict))]
     raw_df['data'] = pd.to_datetime(raw_df['data'], format='%Y-%m-%dT%H:%M:%S')
 
     for i, date in enumerate(period):
@@ -248,7 +238,7 @@ def get_india_origin_data(data_info):
     period = get_period(data_info['start_date'], data_info['end_date'], out_date_format='%Y-%m-%d')
 
     raw_dict = load_raw_data(country)
-    raw_df = raw_dict[raw_dict.keys()[0]]
+    raw_df = raw_dict[next(iter(raw_dict))]
 
     for date in period:
         date_df = raw_df.loc[raw_df['Date'] == date]
@@ -271,5 +261,6 @@ def get_india_origin_data(data_info):
 
 
 if __name__ == '__main__':
-    country = Country.ITALY
-    get_origin_data(country)
+    country = Country.INDIA
+    raw_dict = download_raw_data(country)
+    origin_dict = get_origin_data(country)
