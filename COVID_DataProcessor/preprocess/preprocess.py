@@ -1,31 +1,31 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo
 from COVID_DataProcessor.io import load_links, load_origin_data, load_population
-from COVID_DataProcessor.io import save_setting, save_preprocessed_dict, save_sird_dict
+from COVID_DataProcessor.io import save_setting, save_sird_dict
 from copy import copy
 
 import pandas as pd
 import numpy as np
 
 
-def preprocess_test_number(test_num_df, pre_info):
-    regions = test_num_df.index.tolist()
+def get_sird_dict(country, pre_info):
+    save_setting(pre_info, 'pre_info')
 
-    for region in regions:
-        target_value = test_num_df.loc[region, :].to_list()
-        if pre_info.daily:
-            target_value = target_to_daily(target_value)
-        if pre_info.remove_zero:
-            target_value = make_zero_and_negative_removed(target_value)
-            target_value = remove_target_zeros(target_value)
-        if pre_info.smoothing:
-            target_value = smooth(target_value, pre_info.window)
+    data_dict = load_origin_data(country)
+    preprocessed_dict = preprocess_origin_dict(country, data_dict, pre_info)
+    sird_dict = convert_columns_to_sird(country, preprocessed_dict, pre_info)
+    save_sird_dict(country, pre_info, sird_dict)
 
-        test_num_df.loc[region, :] = target_value
+    return sird_dict
 
-    if pre_info.smoothing:
-        test_num_df = test_num_df.iloc[:, pre_info.window:]
 
-    return test_num_df
+def preprocess_origin_dict(country, data_dict, pre_info):
+    preprocessed_dict = dict()
+
+    for region, region_df in data_dict.items():
+        preprocessed_df = preprocess(region_df, load_population(country, region), pre_info)
+        preprocessed_dict.update({region: preprocessed_df})
+
+    return preprocessed_dict
 
 
 def preprocess(parsed_df, population, pre_info):
@@ -43,18 +43,9 @@ def preprocess(parsed_df, population, pre_info):
     return parsed_df
 
 
-def preprocess_data_dict(data_dict, pre_info, population_df):
-    preprocessed_dict = dict()
-    for region, region_df in data_dict.items():
-        preprocessed_df = preprocess(region_df, population_df.loc[region, 'population'], pre_info)
-        preprocessed_dict.update({region: preprocessed_df})
-
-    return preprocessed_dict
-
-
-def convert_columns_to_sird(dataset_dict, pre_info, population_df):
+def convert_columns_to_sird(country, dataset_dict, pre_info):
     new_columns = ['date', 'susceptible', 'infected', 'recovered', 'deceased']
-    new_dataset_dict = dict()
+    sird_dict = dict()
 
     for region, dataset in dataset_dict.items():
         new_df = pd.DataFrame(columns=new_columns)
@@ -64,7 +55,7 @@ def convert_columns_to_sird(dataset_dict, pre_info, population_df):
         deceased = dataset['deaths'].to_numpy()
 
         if pre_info.divide is False:
-            population = population_df.loc[region][0]
+            population = load_population(country, region)
             susceptible = np.full(infected.shape, population) - infected - recovered - deceased
         else:
             susceptible = np.ones_like(infected) - infected - recovered - deceased
@@ -77,9 +68,10 @@ def convert_columns_to_sird(dataset_dict, pre_info, population_df):
 
         new_df = new_df.set_index('date')
 
-        new_dataset_dict.update({region: new_df})
+        sird_dict.update({region: new_df})
 
-    return new_dataset_dict
+    save_sird_dict(country, pre_info, sird_dict)
+    return sird_dict
 
 
 def dataset_to_increased(target_df, targets):
@@ -242,28 +234,12 @@ def make_zero_and_negative_removed(target_values):
     return target_values
 
 
-def get_preprocessed_dict(country, pre_info):
-    save_setting(pre_info, 'pre_info')
-
-    data_dict = load_origin_data(country)
-    population_df = load_population(country)
-
-    preprocessed_dict = preprocess_data_dict(data_dict, pre_info, population_df)
-    save_preprocessed_dict(country, pre_info, preprocessed_dict)
-
-    return preprocessed_dict
-
-
 if __name__ == '__main__':
-    country = Country.CHINA
+    country = Country.INDIA
     link_df = load_links(country)
-    population_df = load_population(country)
 
-    pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+    sird_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=True, remove_zero=True,
-                              smoothing=True, window=9, divide=False)
+                              smoothing=True, window=5, divide=False)
 
-    preprocessed_dict = get_preprocessed_dict(country, pre_info)
-
-    sird_dict = convert_columns_to_sird(preprocessed_dict, pre_info, population_df)
-    save_sird_dict(country, pre_info, sird_dict)
+    sird_dict = get_sird_dict(country, sird_info)

@@ -1,4 +1,7 @@
 from datetime import date, datetime, timedelta
+from os.path import split
+
+import pandas as pd
 
 
 def get_period(start_date, end_date, out_date_format=None):
@@ -54,6 +57,18 @@ def get_common_dates(dates1, dates2):
 
     common_dates = get_period(start_date, end_date, out_date_format='%Y-%m-%d')
     return common_dates
+
+
+def path_to_name(file_path, extension='.csv'):
+    _, file_name = split(file_path)
+    file_name = file_name.split(extension)[0]
+    return file_name
+
+
+def generate_dataframe(index, columns, index_name):
+    df = pd.DataFrame(index=index, columns=columns)
+    df.index.name = index_name
+    return df
 
 
 if __name__ == '__main__':

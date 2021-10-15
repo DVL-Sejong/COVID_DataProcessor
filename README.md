@@ -46,3 +46,17 @@ oregon
 CHINA
 
 나라 데이터 자체가 이상함
+
+
+
+### 처음 실행할 때
+
+download.py 실행 -> preprocess.py 실행 -> r0.py 실행
+
+
+
+### 예외처리
+
+test_info에서 increase는 항상 false여야 함
+
+sird 데이터셋 준비할 때 mortality rate 구하는 과정에서 sird_dict는 divide=False여야 함
