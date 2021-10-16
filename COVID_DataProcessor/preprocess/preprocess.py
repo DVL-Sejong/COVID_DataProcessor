@@ -87,13 +87,14 @@ def dataset_to_increased(target_df, targets):
 
 def cumulated_to_daily(target_df, targets):
     preprocessed_df = target_df.copy(deep=True)
+    new_index = preprocessed_df.index[1:]
 
     for target in targets:
         target_values = preprocessed_df[target].to_list()
         daily_values = target_to_daily(target_values)
-        preprocessed_df.loc[:, target] = daily_values
+        preprocessed_df.loc[new_index, target] = daily_values
 
-    return preprocessed_df
+    return preprocessed_df.loc[new_index, :]
 
 
 def apply_moving_average(target_df, targets, window):
@@ -172,10 +173,16 @@ def target_to_increased(target_values):
 
 def target_to_daily(target_values):
     daily_values = []
-    daily_values.append(target_values[0])
 
+    zero_ended = False
     for i in range(len(target_values) - 1):
-        daily_values.append(target_values[i + 1] - target_values[i])
+        if zero_ended is False and target_values[i] != 0:
+            zero_ended = True
+            daily_values.append(0)
+        elif zero_ended is False and target_values[i] == 0:
+            daily_values.append(target_values[i])
+        else:
+            daily_values.append(target_values[i + 1] - target_values[i])
 
     return daily_values
 
@@ -235,7 +242,7 @@ def make_zero_and_negative_removed(target_values):
 
 
 if __name__ == '__main__':
-    country = Country.INDIA
+    country = Country.ITALY
     link_df = load_links(country)
 
     sird_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
