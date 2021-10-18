@@ -14,6 +14,11 @@ class Country(Enum):
     US_CONFIRMED = 4
 
 
+class PreType(Enum):
+    SIRD = 0
+    TEST = 1
+
+
 @dataclass
 class PreprocessInfo:
     country: Country = None
@@ -34,10 +39,12 @@ class PreprocessInfo:
     _window: int = field(default=False)
     divide: bool = None
     _divide: bool = field(default=True)
+    pre_type: bool = None
+    _pre_type: bool = field(default=True)
 
     def __init__(self, country, start, end,
                  increase: bool, daily: bool, remove_zero: bool,
-                 smoothing: bool, window: int, divide: bool):
+                 smoothing: bool, window: int, divide: bool, pre_type: bool = PreType.SIRD):
         self.country = country
         self.start = start
         self.end = end
@@ -47,6 +54,7 @@ class PreprocessInfo:
         self.smoothing = smoothing
         self.window = window
         self.divide = divide
+        self.pre_type = pre_type
 
         self.check_valid()
 
@@ -184,6 +192,9 @@ class PreprocessInfo:
                 raise ValueError(f'window has to bigger than 0, {self.window}')
             elif self.window % 2 == 0:
                 raise ValueError(f'window value has to be odd, {self.window}')
+
+        if self.pre_type is PreType.TEST and self.divide is True:
+            raise ValueError(f'divide cannot be True for test number dataset!')
 
 
 @dataclass
