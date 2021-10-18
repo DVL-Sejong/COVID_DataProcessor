@@ -57,6 +57,5 @@ download.py 실행 -> preprocess.py 실행 -> r0.py 실행
 
 ### 예외처리
 
-test_info에서 increase는 항상 false여야 함
+smoothing 적용될 때 앞 뒤 자름? 아직 잘 모르겠음
 
-sird 데이터셋 준비할 때 mortality rate 구하는 과정에서 sird_dict는 divide=False여야 함

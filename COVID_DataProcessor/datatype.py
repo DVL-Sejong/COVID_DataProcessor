@@ -14,6 +14,11 @@ class Country(Enum):
     US_CONFIRMED = 4
 
 
+class PreType(Enum):
+    SIRD = 0
+    TEST = 1
+
+
 @dataclass
 class PreprocessInfo:
     country: Country = None
@@ -34,10 +39,12 @@ class PreprocessInfo:
     _window: int = field(default=False)
     divide: bool = None
     _divide: bool = field(default=True)
+    pre_type: bool = None
+    _pre_type: bool = field(default=True)
 
     def __init__(self, country, start, end,
                  increase: bool, daily: bool, remove_zero: bool,
-                 smoothing: bool, window: int, divide: bool):
+                 smoothing: bool, window: int, divide: bool, pre_type: bool = PreType.SIRD):
         self.country = country
         self.start = start
         self.end = end
@@ -47,6 +54,9 @@ class PreprocessInfo:
         self.smoothing = smoothing
         self.window = window
         self.divide = divide
+        self.pre_type = pre_type
+
+        self.check_valid()
 
     def __repr__(self):
         representation = f'PreprocessInfo(country: {self._country.name}, start: {self._start}, end: {self._end}, '
@@ -152,10 +162,7 @@ class PreprocessInfo:
 
     @window.setter
     def window(self, window: int):
-        if self._smoothing is False:
-            self._window = 0
-        else:
-            self._window = window
+        self._window = window
 
     @property
     def divide(self) -> bool:
@@ -168,6 +175,26 @@ class PreprocessInfo:
     def get_hash(self):
         hash_key = hashlib.sha1(self.__repr__().encode()).hexdigest()[:6]
         return hash_key
+
+    def check_valid(self):
+        if self.daily is False and self.remove_zero is True:
+            self.remove_zero = False
+            print(f'remove_zero cannot be implemented when daily is set to False.', end=' ')
+            print(f'remove_zero value is changed to False')
+
+        if self.smoothing is False and self.window != 0:
+            self.window = 0
+            print(f'window cannot bigger than 0 if smoothing is set to False.', end=' ')
+            print(f'window value is changed to 0')
+
+        if self.smoothing is True:
+            if self.window <= 0:
+                raise ValueError(f'window has to bigger than 0, {self.window}')
+            elif self.window % 2 == 0:
+                raise ValueError(f'window value has to be odd, {self.window}')
+
+        if self.pre_type is PreType.TEST and self.divide is True:
+            raise ValueError(f'divide cannot be True for test number dataset!')
 
 
 @dataclass
