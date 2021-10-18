@@ -69,6 +69,7 @@ def load_origin_data(country):
     data_dict = dict()
 
     for region in regions:
+        print(join(origin_path, f'{region}.csv'))
         region_df = pd.read_csv(join(origin_path, f'{region}.csv'), index_col='date')
         data_dict.update({region: region_df})
 
@@ -89,7 +90,7 @@ def load_first_confirmed_date(country):
 
 
 def load_preprocessed_data(country, pre_info):
-    pre_path = join(DATASET_PATH, get_country_name(country), pre_info.get_hash())
+    pre_path = join(DATASET_PATH, get_country_name(country), 'preprocessed_data', pre_info.get_hash())
     regions = load_regions(country)
     pre_dict = dict()
 
@@ -154,7 +155,7 @@ def save_raw_file(country, raw_df, name):
 
 
 def save_dict(base_path, data_dict, data_name):
-    index = False if data_name == 'raw' else None
+    index = False if data_name == 'raw' else True
 
     for region, region_df in data_dict.items():
         saving_path = join(base_path, f'{region}.csv')
@@ -172,8 +173,11 @@ def save_origin_data(country, df_dict):
     save_dict(origin_path, df_dict, 'origin')
 
 
-def save_preprocessed_dict(country, pre_info, preprocessed_dict):
-    pre_path = get_safe_path([DATASET_PATH, get_country_name(country), 'preprocessed_data', pre_info.get_hash()])
+def save_preprocessed_dict(country, pre_info, preprocessed_dict, base_path=None):
+    if base_path is None:
+        pre_path = get_safe_path([DATASET_PATH, get_country_name(country), 'preprocessed_data', pre_info.get_hash()])
+    else:
+        pre_path = get_safe_path([base_path, 'preprocessed', pre_info.get_hash()])
     save_dict(pre_path, preprocessed_dict, 'preprocessed')
 
 
@@ -220,6 +224,7 @@ def save_dataset_for_r0_model(country, dataset_dict):
     dataset_path = get_safe_path([RESULT_PATH, 'R0', get_country_name(country)])
     print(f'save dataset for r0 estimating model under {dataset_path}')
     save_test_number(country, dataset_dict['test_info'], dataset_dict['test_num'], dataset_path)
+    save_preprocessed_dict(country, dataset_dict['sird_info'], dataset_dict['pre_dict'], dataset_path)
     save_sird_dict(country, dataset_dict['sird_info'], dataset_dict['sird_dict'], dataset_path)
     save_first_confirmed_date(country, dataset_dict['first_confirmed'], dataset_path)
     dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))

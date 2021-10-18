@@ -1,5 +1,6 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo
-from COVID_DataProcessor.io import load_population, load_sird_dict, load_regions, load_us_confirmed_data
+from COVID_DataProcessor.io import load_population, load_sird_dict, load_regions
+from COVID_DataProcessor.io import load_us_confirmed_data, load_preprocessed_data
 from COVID_DataProcessor.io import load_origin_data, save_first_confirmed_date, load_links, save_dataset_for_r0_model
 from COVID_DataProcessor.preprocess.test_number import get_test_number
 
@@ -10,11 +11,12 @@ def get_dataset_for_r0_model(country, sird_info, test_info):
     first_confirmed_date_df = get_first_confirmed_date(country)
     population_df = load_population(country)
     test_num_df = get_test_number(country, test_info)
+    pre_dict = load_preprocessed_data(country, sird_info)
     sird_dict = load_sird_dict(country, sird_info)
 
     dataset_dict = {'first_confirmed': first_confirmed_date_df, 'population': population_df,
                     'test_info': test_info, 'test_num': test_num_df,
-                    'sird_info': sird_info, 'sird_dict': sird_dict}
+                    'sird_info': sird_info, 'pre_dict': pre_dict, 'sird_dict': sird_dict}
     save_dataset_for_r0_model(country, dataset_dict)
     return dataset_dict
 
@@ -44,7 +46,7 @@ def get_first_confirmed_date(country):
 
 
 if __name__ == '__main__':
-    country = Country.INDIA
+    country = Country.ITALY
     link_df = load_links(country)
 
     sird_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
@@ -52,7 +54,7 @@ if __name__ == '__main__':
                                smoothing=True, window=5, divide=False)
 
     test_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
-                              increase=False, daily=True, remove_zero=True,
+                              increase=True, daily=True, remove_zero=True,
                               smoothing=True, window=5, divide=False)
 
     dataset_dict = get_dataset_for_r0_model(country, sird_info, test_info)

@@ -8,7 +8,7 @@ import numpy as np
 
 
 def get_sird_dict(country, sird_info):
-    save_setting(sird_info, 'pre_info')
+    save_setting(sird_info, 'sird_info')
 
     data_dict = load_origin_data(country)
     preprocessed_dict = preprocess_origin_dict(country, data_dict, sird_info)
@@ -19,6 +19,7 @@ def get_sird_dict(country, sird_info):
 
 
 def preprocess_origin_dict(country, data_dict, pre_info):
+    save_setting(sird_info, 'pre_info')
     preprocessed_dict = dict()
 
     for region, region_df in data_dict.items():
