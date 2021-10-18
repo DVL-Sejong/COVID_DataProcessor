@@ -261,6 +261,6 @@ def get_india_origin_data(data_info):
 
 
 if __name__ == '__main__':
-    country = Country.INDIA
+    country = Country.ITALY
     raw_dict = download_raw_data(country)
     origin_dict = get_origin_data(country)
