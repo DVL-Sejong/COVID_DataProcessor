@@ -122,6 +122,12 @@ def load_r0_df(country):
     return r0_df
 
 
+def load_test_number(country, test_info):
+    test_path = join(RESULT_PATH, get_country_name(country), 'number_of_tests', test_info.get_hash())
+    test_df = pd.read_csv(join(test_path, 'number_of_tests.csv'), index_col='regions')
+    return test_df
+
+
 def save_raw_file(country, raw_df, name):
     raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
     Path(raw_path).mkdir(parents=True, exist_ok=True)
@@ -131,9 +137,11 @@ def save_raw_file(country, raw_df, name):
 
 
 def save_dict(base_path, data_dict, data_name):
+    index = False if data_name == 'raw' else None
+
     for region, region_df in data_dict.items():
         saving_path = join(base_path, f'{region}.csv')
-        region_df.to_csv(saving_path)
+        region_df.to_csv(saving_path, index=index)
         print(f'saving {region} {data_name} data to {saving_path}')
 
 
@@ -243,6 +251,7 @@ def save_setting(param_class, class_name):
             df.to_csv(join(SETTING_PATH, filename))
             print(f'updating settings to {join(SETTING_PATH, filename)}')
     else:
+        Path(SETTING_PATH).mkdir(parents=True, exist_ok=True)
         param_df.to_csv(join(SETTING_PATH, filename))
         print(f'saving settings to {join(SETTING_PATH, filename)}')
 

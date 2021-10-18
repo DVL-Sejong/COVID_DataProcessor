@@ -20,3 +20,22 @@ def plot_data_by_type(data_df, target_column, region,
     plt.suptitle(region)
     plt.grid(True, axis='x', which='both', linewidth=grid_linewidth)
     plt.show()
+
+
+def plot_multiple_graph(data, names, suptitle,
+                        figsize=(15, 5), fontsize=10, ticks=35, horizontal=None):
+    dates = data[0].columns.tolist()
+
+    plt.rcParams.update({'font.size': fontsize})
+
+    plt.figure(figsize=(figsize))
+    for i, elem in enumerate(data):
+        plt.plot(dates, elem.iloc[0, :].to_list(), label=names[i])
+
+    if horizontal is not None:
+        plt.axhline(y=horizontal, color='red', linestyle='--')
+
+    plt.xticks([elem for i, elem in enumerate(dates) if i % ticks == 0])
+    plt.suptitle(suptitle)
+    plt.legend()
+    plt.show()
