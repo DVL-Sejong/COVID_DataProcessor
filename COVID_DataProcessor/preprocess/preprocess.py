@@ -1,5 +1,5 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo
-from COVID_DataProcessor.io import load_links, load_origin_data, load_population
+from COVID_DataProcessor.io import load_links, load_origin_data, load_population, save_preprocessed_dict
 from COVID_DataProcessor.io import save_setting, save_sird_dict
 from copy import copy
 
@@ -25,6 +25,7 @@ def preprocess_origin_dict(country, data_dict, pre_info):
         preprocessed_df = preprocess(region_df, load_population(country, region), pre_info)
         preprocessed_dict.update({region: preprocessed_df})
 
+    save_preprocessed_dict(country, pre_info, preprocessed_dict)
     return preprocessed_dict
 
 

@@ -81,6 +81,18 @@ def load_first_confirmed_date(country):
     return first_confirmed_date_df
 
 
+def load_preprocessed_data(country, pre_info):
+    pre_path = join(DATASET_PATH, get_country_name(country), pre_info.get_hash())
+    regions = load_regions(country)
+    pre_dict = dict()
+
+    for region in regions:
+        region_df = pd.read_csv(join(pre_path, f'{region}.csv'), index_col='date')
+        pre_dict.update({region: region_df})
+
+    return pre_dict
+
+
 def load_sird_dict(country, pre_info):
     sird_path = join(DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash())
     sird_path_list = glob(f'{sird_path}/*.csv')
@@ -155,6 +167,12 @@ def save_origin_data(country, df_dict):
     origin_path = join(DATASET_PATH, get_country_name(country), 'origin_data')
     Path(origin_path).mkdir(parents=True, exist_ok=True)
     save_dict(origin_path, df_dict, 'origin')
+
+
+def save_preprocessed_dict(country, pre_info, preprocessed_dict):
+    pre_path = join(DATASET_PATH, get_country_name(country), 'preprocessed_data', pre_info.get_hash())
+    Path(pre_path).mkdir(parents=True, exist_ok=True)
+    save_dict(pre_path, preprocessed_dict, 'preprocessed')
 
 
 def save_sird_dict(country, pre_info, sird_dict, base_path=None):
