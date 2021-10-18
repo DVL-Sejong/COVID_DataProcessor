@@ -48,6 +48,8 @@ class PreprocessInfo:
         self.window = window
         self.divide = divide
 
+        self.check_valid()
+
     def __repr__(self):
         representation = f'PreprocessInfo(country: {self._country.name}, start: {self._start}, end: {self._end}, '
         representation += f'increase: {self._increase}, daily: {self._daily}, remove_zero: {self._remove_zero}, '
@@ -152,10 +154,7 @@ class PreprocessInfo:
 
     @window.setter
     def window(self, window: int):
-        if self._smoothing is False:
-            self._window = 0
-        else:
-            self._window = window
+        self._window = window
 
     @property
     def divide(self) -> bool:
@@ -168,6 +167,23 @@ class PreprocessInfo:
     def get_hash(self):
         hash_key = hashlib.sha1(self.__repr__().encode()).hexdigest()[:6]
         return hash_key
+
+    def check_valid(self):
+        if self.daily is False and self.remove_zero is True:
+            self.remove_zero = False
+            print(f'remove_zero cannot be implemented when daily is set to False.', end=' ')
+            print(f'remove_zero value is changed to False')
+
+        if self.smoothing is False and self.window != 0:
+            self.window = 0
+            print(f'window cannot bigger than 0 if smoothing is set to False.', end=' ')
+            print(f'window value is changed to 0')
+
+        if self.smoothing is True:
+            if self.window <= 0:
+                raise ValueError(f'window has to bigger than 0, {self.window}')
+            elif self.window % 2 == 0:
+                raise ValueError(f'window value has to be odd, {self.window}')
 
 
 @dataclass

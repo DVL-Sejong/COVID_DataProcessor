@@ -7,13 +7,13 @@ import pandas as pd
 import numpy as np
 
 
-def get_sird_dict(country, pre_info):
-    save_setting(pre_info, 'pre_info')
+def get_sird_dict(country, sird_info):
+    save_setting(sird_info, 'pre_info')
 
     data_dict = load_origin_data(country)
-    preprocessed_dict = preprocess_origin_dict(country, data_dict, pre_info)
-    sird_dict = convert_columns_to_sird(country, preprocessed_dict, pre_info)
-    save_sird_dict(country, pre_info, sird_dict)
+    preprocessed_dict = preprocess_origin_dict(country, data_dict, sird_info)
+    sird_dict = convert_columns_to_sird(country, preprocessed_dict, sird_info)
+    save_sird_dict(country, sird_info, sird_dict)
 
     return sird_dict
 
@@ -44,7 +44,7 @@ def preprocess(parsed_df, population, pre_info):
     return parsed_df
 
 
-def convert_columns_to_sird(country, dataset_dict, pre_info):
+def convert_columns_to_sird(country, dataset_dict, sird_info):
     new_columns = ['date', 'susceptible', 'infected', 'recovered', 'deceased']
     sird_dict = dict()
 
@@ -55,7 +55,7 @@ def convert_columns_to_sird(country, dataset_dict, pre_info):
         recovered = dataset['recovered'].to_numpy()
         deceased = dataset['deaths'].to_numpy()
 
-        if pre_info.divide is False:
+        if sird_info.divide is False:
             population = load_population(country, region)
             susceptible = np.full(infected.shape, population) - infected - recovered - deceased
         else:
@@ -71,7 +71,7 @@ def convert_columns_to_sird(country, dataset_dict, pre_info):
 
         sird_dict.update({region: new_df})
 
-    save_sird_dict(country, pre_info, sird_dict)
+    save_sird_dict(country, sird_info, sird_dict)
     return sird_dict
 
 
