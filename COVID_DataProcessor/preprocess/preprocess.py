@@ -29,15 +29,19 @@ def preprocess_origin_dict(country, data_dict, pre_info):
     return preprocessed_dict
 
 
-def preprocess(parsed_df, population, pre_info):
+def preprocess(parsed_df, population, pre_info, targets=None):
     if pre_info.increase:
-        parsed_df = dataset_to_increased(parsed_df, targets=['confirmed', 'deaths', 'recovered'])
+        targets = ['confirmed', 'deaths', 'recovered'] if targets is None else targets
+        parsed_df = dataset_to_increased(parsed_df, targets=targets)
     if pre_info.daily:
-        parsed_df = cumulated_to_daily(parsed_df, targets=['confirmed', 'deaths', 'recovered'])
+        targets = ['confirmed', 'deaths', 'recovered'] if targets is None else targets
+        parsed_df = cumulated_to_daily(parsed_df, targets=targets)
     if pre_info.remove_zero:
-        parsed_df = remove_zero_period(parsed_df, targets=['recovered'])
+        targets = ['recovered'] if targets is None else targets
+        parsed_df = remove_zero_period(parsed_df, targets=targets)
     if pre_info.smoothing:
-        parsed_df = apply_moving_average(parsed_df, targets=['confirmed', 'deaths', 'recovered', 'active'], window=pre_info.window)
+        targets = ['confirmed', 'deaths', 'recovered', 'active'] if targets is None else targets
+        parsed_df = apply_moving_average(parsed_df, targets=targets, window=pre_info.window)
     if pre_info.divide:
         parsed_df = divide_by_population(parsed_df, population)
 

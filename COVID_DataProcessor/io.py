@@ -47,7 +47,7 @@ def load_regions(country):
 
 
 def load_raw_data(country):
-    raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
+    raw_path = join(DATASET_PATH, get_country_name(country))
     raw_path_list = glob(join(raw_path, 'raw_data', '*.csv'))
 
     if len(raw_path_list) == 0:
@@ -251,7 +251,7 @@ def save_setting(param_class, class_name):
     new_param_dict.update({'hash': param_class.get_hash()})
 
     for field in fields(param_class):
-        if field.name[0] == '_': continue
+        if field.name[0] == '_' or field.name == 'pre_type': continue
         new_param_dict.update({field.name: getattr(param_class, field.name)})
 
     param_df = pd.DataFrame(columns=list(new_param_dict.keys()))

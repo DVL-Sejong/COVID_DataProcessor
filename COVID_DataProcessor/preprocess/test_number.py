@@ -1,7 +1,6 @@
 from COVID_DataProcessor.datatype import Country, get_country_name
 from COVID_DataProcessor.io import save_setting, load_raw_data, load_regions, save_test_number
-from COVID_DataProcessor.preprocess.preprocess import target_to_daily, make_zero_and_negative_removed
-from COVID_DataProcessor.preprocess.preprocess import remove_target_zeros, smooth
+from COVID_DataProcessor.preprocess.preprocess import preprocess
 from COVID_DataProcessor.util import get_period, generate_dataframe
 from datetime import datetime, timedelta
 
@@ -25,23 +24,8 @@ def get_test_number(country, test_info):
 
 def preprocess_test_number(test_num_df, test_info):
     regions = test_num_df.index.tolist()
-
-    for region in regions:
-        target_value = test_num_df.loc[region, :].to_list()
-        if test_info.daily:
-            target_value = target_to_daily(target_value)
-        if test_info.remove_zero:
-            target_value = make_zero_and_negative_removed(target_value)
-            target_value = remove_target_zeros(target_value)
-        if test_info.smoothing:
-            target_value = smooth(target_value, test_info.window)
-
-        test_num_df.loc[region, :] = target_value
-
-    if test_info.smoothing:
-        test_num_df = test_num_df.iloc[:, test_info.window:]
-
-    return test_num_df
+    preprocessed_df = preprocess(test_num_df.T, None, test_info, regions)
+    return preprocessed_df.T
 
 
 def get_test_number_of_us(country, test_info):
