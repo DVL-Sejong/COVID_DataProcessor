@@ -24,7 +24,7 @@ def get_safe_path(directory_list):
     return safe_path
 
 
-def get_base_path(country):
+def get_result_base_path(country):
     return get_safe_path([RESULT_PATH, get_country_name(country)])
 
 
@@ -35,8 +35,7 @@ def load_links(country=None):
 
 
 def load_population(country, region=None):
-    population_path = join(DATASET_PATH, get_country_name(country), 'population.csv')
-    population_df = pd.read_csv(population_path, index_col='regions')
+    population_df = pd.read_csv(join(DATASET_PATH, get_country_name(country), 'population.csv'), index_col='regions')
     return population_df if region is None else population_df.loc[region, 'population']
 
 
@@ -49,7 +48,7 @@ def load_regions(country):
 
 def load_raw_data(country):
     raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
-    raw_path_list = glob(join(raw_path, '*.csv'))
+    raw_path_list = glob(join(raw_path, 'raw_data', '*.csv'))
 
     if len(raw_path_list) == 0:
         print(f'Raw data of {get_country_name(country)} is not existing!')
@@ -195,7 +194,7 @@ def save_I_df(country, pre_info, I_df):
 
 
 def save_sird_initial_info(pre_info, initial_df, country, region, base_path=None):
-    base_path = get_base_path(country) if base_path is None else base_path
+    base_path = get_result_base_path(country) if base_path is None else base_path
     initial_path = get_safe_path([base_path, 'initial_values', pre_info.get_hash()])
     saving_path = join(initial_path, f'{region}.csv')
     initial_df.to_csv(saving_path)
@@ -203,14 +202,14 @@ def save_sird_initial_info(pre_info, initial_df, country, region, base_path=None
 
 
 def save_first_confirmed_date(country, first_confirmed_date_df, base_path=None):
-    base_path = get_base_path(country) if base_path is None else base_path
+    base_path = get_result_base_path(country) if base_path is None else base_path
     saving_path = join(base_path, 'first_confirmed_date.csv')
     first_confirmed_date_df.to_csv(saving_path)
     print(f'saving first confirmed date of {country.name} to {saving_path}')
 
 
 def save_test_number(country, pre_info, test_num_df, base_path=None):
-    base_path = get_base_path(country) if base_path is None else base_path
+    base_path = get_result_base_path(country) if base_path is None else base_path
     test_number_path = get_safe_path([base_path, 'number_of_tests', pre_info.get_hash()])
     saving_path = join(test_number_path, 'number_of_tests.csv')
     test_num_df.to_csv(saving_path)
@@ -227,7 +226,7 @@ def save_dataset_for_r0_model(country, dataset_dict):
 
 
 def save_infectious_period(country, period_df, base_path=None):
-    base_path = get_base_path(country) if base_path is None else base_path
+    base_path = get_result_base_path(country) if base_path is None else base_path
     period_path = join(base_path, 'infectious_period.csv')
     period_df.to_csv(period_path)
     print(f'saving infectious period to {period_path}')
