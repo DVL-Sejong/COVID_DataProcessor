@@ -14,10 +14,18 @@ SETTING_PATH = join(ROOT_PATH, 'settings')
 RESULT_PATH = join(ROOT_PATH, 'results')
 
 
-def get_base_path(country):
-    base_path = join(RESULT_PATH, get_country_name(country))
-    Path(base_path).mkdir(parents=True, exist_ok=True)
-    return base_path
+def get_safe_path(directory_list):
+    safe_path = ''
+
+    for directory in directory_list:
+        safe_path = join(safe_path, directory)
+
+    Path(safe_path).mkdir(parents=True, exist_ok=True)
+    return safe_path
+
+
+def get_result_base_path(country):
+    return get_safe_path([RESULT_PATH, get_country_name(country)])
 
 
 def load_links(country=None):
@@ -27,8 +35,7 @@ def load_links(country=None):
 
 
 def load_population(country, region=None):
-    population_path = join(DATASET_PATH, get_country_name(country), 'population.csv')
-    population_df = pd.read_csv(population_path, index_col='regions')
+    population_df = pd.read_csv(join(DATASET_PATH, get_country_name(country), 'population.csv'), index_col='regions')
     return population_df if region is None else population_df.loc[region, 'population']
 
 
@@ -41,7 +48,7 @@ def load_regions(country):
 
 def load_raw_data(country):
     raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
-    raw_path_list = glob(join(raw_path, '*.csv'))
+    raw_path_list = glob(join(raw_path, 'raw_data', '*.csv'))
 
     if len(raw_path_list) == 0:
         print(f'Raw data of {get_country_name(country)} is not existing!')
@@ -79,6 +86,18 @@ def load_first_confirmed_date(country):
     first_date_path = join(RESULT_PATH, 'SIRD', get_country_name(country), 'first_confirmed_date.csv')
     first_confirmed_date_df = pd.read_csv(first_date_path, index_col='regions')
     return first_confirmed_date_df
+
+
+def load_preprocessed_data(country, pre_info):
+    pre_path = join(DATASET_PATH, get_country_name(country), pre_info.get_hash())
+    regions = load_regions(country)
+    pre_dict = dict()
+
+    for region in regions:
+        region_df = pd.read_csv(join(pre_path, f'{region}.csv'), index_col='date')
+        pre_dict.update({region: region_df})
+
+    return pre_dict
 
 
 def load_sird_dict(country, pre_info):
@@ -129,9 +148,7 @@ def load_test_number(country, test_info):
 
 
 def save_raw_file(country, raw_df, name):
-    raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
-    Path(raw_path).mkdir(parents=True, exist_ok=True)
-
+    raw_path = get_safe_path([DATASET_PATH, get_country_name(country), 'raw_data'])
     raw_df.to_csv(join(raw_path, f'{name}.csv'), index=False)
     print(f'saving raw file to {raw_path}')
 
@@ -146,62 +163,61 @@ def save_dict(base_path, data_dict, data_name):
 
 
 def save_raw_data(country, raw_dict):
-    raw_path = join(DATASET_PATH, get_country_name(country), 'raw_data')
-    Path(raw_path).mkdir(parents=True, exist_ok=True)
+    raw_path = get_safe_path([DATASET_PATH, get_country_name(country), 'raw_data'])
     save_dict(raw_path, raw_dict, 'raw')
 
 
 def save_origin_data(country, df_dict):
-    origin_path = join(DATASET_PATH, get_country_name(country), 'origin_data')
-    Path(origin_path).mkdir(parents=True, exist_ok=True)
+    origin_path = get_safe_path([DATASET_PATH, get_country_name(country), 'origin_data'])
     save_dict(origin_path, df_dict, 'origin')
+
+
+def save_preprocessed_dict(country, pre_info, preprocessed_dict):
+    pre_path = get_safe_path([DATASET_PATH, get_country_name(country), 'preprocessed_data', pre_info.get_hash()])
+    save_dict(pre_path, preprocessed_dict, 'preprocessed')
 
 
 def save_sird_dict(country, pre_info, sird_dict, base_path=None):
     if base_path is None:
-        sird_path = join(DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash())
+        sird_list = [DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash()]
     else:
-        sird_path = join(base_path, 'sird', pre_info.get_hash())
-    Path(sird_path).mkdir(parents=True, exist_ok=True)
+        sird_list = [base_path, 'sird', pre_info.get_hash()]
+    sird_path = get_safe_path(sird_list)
     save_dict(sird_path, sird_dict, 'SIRD')
 
 
 def save_I_df(country, pre_info, I_df):
-    i_path = join(DATASET_PATH, get_country_name(country), 'i_data', pre_info.get_hash())
-    Path(i_path).mkdir(parents=True, exist_ok=True)
+    i_path = get_safe_path([DATASET_PATH, get_country_name(country), 'i_data', pre_info.get_hash()])
     saving_path = join(i_path, 'I.csv')
     I_df.to_csv(saving_path)
     print(f'saving I_df to {saving_path}')
 
 
 def save_sird_initial_info(pre_info, initial_df, country, region, base_path=None):
-    base_path = get_base_path(country) if base_path is None else base_path
-    initial_path = join(base_path, 'initial_values', pre_info.get_hash())
-    Path(initial_path).mkdir(parents=True, exist_ok=True)
+    base_path = get_result_base_path(country) if base_path is None else base_path
+    initial_path = get_safe_path([base_path, 'initial_values', pre_info.get_hash()])
     saving_path = join(initial_path, f'{region}.csv')
     initial_df.to_csv(saving_path)
     print(f'saving {region} initial value to {saving_path}')
 
 
 def save_first_confirmed_date(country, first_confirmed_date_df, base_path=None):
-    base_path = get_base_path(country) if base_path is None else base_path
+    base_path = get_result_base_path(country) if base_path is None else base_path
     saving_path = join(base_path, 'first_confirmed_date.csv')
     first_confirmed_date_df.to_csv(saving_path)
     print(f'saving first confirmed date of {country.name} to {saving_path}')
 
 
 def save_test_number(country, pre_info, test_num_df, base_path=None):
-    base_path = get_base_path(country) if base_path is None else base_path
-    test_number_path = join(base_path, 'number_of_tests', pre_info.get_hash())
-    Path(test_number_path).mkdir(parents=True, exist_ok=True)
+    base_path = get_result_base_path(country) if base_path is None else base_path
+    test_number_path = get_safe_path([base_path, 'number_of_tests', pre_info.get_hash()])
     saving_path = join(test_number_path, 'number_of_tests.csv')
     test_num_df.to_csv(saving_path)
     print(f'saving data of number of tests in {country.name} to {saving_path}')
 
 
 def save_dataset_for_r0_model(country, dataset_dict):
-    dataset_path = join(RESULT_PATH, 'R0', get_country_name(country))
-    Path(dataset_path).mkdir(parents=True, exist_ok=True)
+    dataset_path = get_safe_path([RESULT_PATH, 'R0', get_country_name(country)])
     print(f'save dataset for r0 estimating model under {dataset_path}')
     save_test_number(country, dataset_dict['test_info'], dataset_dict['test_num'], dataset_path)
     save_sird_dict(country, dataset_dict['sird_info'], dataset_dict['sird_dict'], dataset_path)
@@ -210,7 +226,7 @@ def save_dataset_for_r0_model(country, dataset_dict):
 
 
 def save_infectious_period(country, period_df, base_path=None):
-    base_path = get_base_path(country) if base_path is None else base_path
+    base_path = get_result_base_path(country) if base_path is None else base_path
     period_path = join(base_path, 'infectious_period.csv')
     period_df.to_csv(period_path)
     print(f'saving infectious period to {period_path}')
@@ -222,8 +238,7 @@ def save_sird_initial_dict(country, initial_dict, sird_info, base_path):
 
 
 def save_dataset_for_sird_model(country, dataset_dict):
-    dataset_path = join(RESULT_PATH, 'SIRD', get_country_name(country))
-    Path(dataset_path).mkdir(parents=True, exist_ok=True)
+    dataset_path = get_safe_path([RESULT_PATH, 'SIRD', get_country_name(country)])
     print(f'save dataset for SIRD model under {dataset_path}')
     save_infectious_period(country, dataset_dict['infectious_period'], dataset_path)
     dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))
