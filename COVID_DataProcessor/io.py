@@ -224,8 +224,7 @@ def save_dataset_for_r0_model(country, dataset_dict):
     dataset_path = get_safe_path([RESULT_PATH, 'R0', get_country_name(country)])
     print(f'save dataset for r0 estimating model under {dataset_path}')
     save_test_number(country, dataset_dict['test_info'], dataset_dict['test_num'], dataset_path)
-    save_preprocessed_dict(country, dataset_dict['sird_info'], dataset_dict['pre_dict'], dataset_path)
-    save_sird_dict(country, dataset_dict['sird_info'], dataset_dict['sird_dict'], dataset_path)
+    save_preprocessed_dict(country, dataset_dict['pre_info'], dataset_dict['pre_dict'], dataset_path)
     save_first_confirmed_date(country, dataset_dict['first_confirmed'], dataset_path)
     dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))
 
