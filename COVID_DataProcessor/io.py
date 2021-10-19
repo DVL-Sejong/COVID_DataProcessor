@@ -136,10 +136,16 @@ def sird_to_I(country, pre_info):
     return I_df
 
 
-def load_r0_df(country):
-    r0_path = join(DATASET_PATH, get_country_name(country), 'r0.csv')
-    r0_df = pd.read_csv(r0_path, index_col='regions')
-    return r0_df
+def load_r0_df(country, pre_hash, test_hash):
+    r0_path = join(DATASET_PATH, get_country_name(country), 'r0', f'{pre_hash}_{test_hash}', 'r0.csv')
+
+    try:
+        r0_df = pd.read_csv(r0_path, index_col='regions')
+        return r0_df
+    except FileNotFoundError as e:
+        print(e)
+        print(f'Estimating r0 has to be proceeded!')
+        raise FileNotFoundError
 
 
 def load_test_number(country, test_info):
@@ -197,9 +203,9 @@ def save_I_df(country, pre_info, I_df):
     print(f'saving I_df to {saving_path}')
 
 
-def save_sird_initial_info(pre_info, initial_df, country, region, base_path=None):
+def save_sird_initial_info(initial_hash, initial_df, country, region, base_path=None):
     base_path = get_result_base_path(country) if base_path is None else base_path
-    initial_path = get_safe_path([base_path, 'initial_values', pre_info.get_hash()])
+    initial_path = get_safe_path([base_path, 'initial_values', initial_hash])
     saving_path = join(initial_path, f'{region}.csv')
     initial_df.to_csv(saving_path)
     print(f'saving {region} initial value to {saving_path}')
@@ -236,9 +242,10 @@ def save_infectious_period(country, period_df, base_path=None):
     print(f'saving infectious period to {period_path}')
 
 
-def save_sird_initial_dict(country, initial_dict, sird_info, base_path):
+def save_sird_initial_dict(country, initial_dict, pre_info, test_info, base_path):
     for key, initial_df in initial_dict.items():
-        save_sird_initial_info(sird_info, initial_df, country, key, base_path)
+        save_sird_initial_info(f'{pre_info.get_hash()}_{test_info.get_hash()}',
+                               initial_df, country, key, base_path)
 
 
 def save_dataset_for_sird_model(country, dataset_dict):
@@ -246,8 +253,8 @@ def save_dataset_for_sird_model(country, dataset_dict):
     print(f'save dataset for SIRD model under {dataset_path}')
     save_infectious_period(country, dataset_dict['infectious_period'], dataset_path)
     dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))
-    save_sird_initial_dict(country, dataset_dict['initial_dict'], dataset_dict['sird_info'], dataset_path)
-    save_sird_dict(country, dataset_dict['sird_info'], dataset_dict['sird_dict'], dataset_path)
+    save_sird_initial_dict(country, dataset_dict['initial_dict'],
+                           dataset_dict['pre_info'], dataset_dict['test_info'], dataset_path)
 
 
 def save_setting(param_class, class_name):
