@@ -47,6 +47,12 @@ CHINA
 
 나라 데이터 자체가 이상함
 
+ITALY
+
+Basilicata 삭제
+
+Piemonte 삭제
+
 
 
 ### 처음 실행할 때
