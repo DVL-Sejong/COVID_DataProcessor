@@ -1,4 +1,4 @@
-from COVID_DataProcessor.datatype import Country, PreprocessInfo, DatasetInfo
+from COVID_DataProcessor.datatype import Country, PreprocessInfo, DatasetInfo, PreType
 from COVID_DataProcessor.io import load_links, load_I_df
 
 from datetime import timedelta
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     sird_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=True, remove_zero=True,
-                              smoothing=True, window=5, divide=True)
+                              smoothing=True, window=5, divide=True, pre_type=PreType.SIRD)
     data_info = DatasetInfo(x_frames=15, y_frames=3,
                             test_start='201230', test_end='210306')
 

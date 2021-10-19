@@ -1,4 +1,4 @@
-from COVID_DataProcessor.datatype import Country, PreprocessInfo
+from COVID_DataProcessor.datatype import Country, PreprocessInfo, PreType
 from COVID_DataProcessor.io import load_sird_dict, load_r0_df, load_links, load_preprocessed_data
 from COVID_DataProcessor.io import save_infectious_period, save_dataset_for_sird_model
 from COVID_DataProcessor.io import save_sird_initial_info, load_population, load_regions
@@ -13,10 +13,15 @@ def get_dataset_for_sird_model(country, pre_info, test_info):
     period_df = get_infectious_period(country)
     population_df = load_population(country)
     initial_dict = get_initial_dict(country, pre_info, test_info)
+    sird_dict = get_sird_dict(country, pre_info)
 
     dataset_dict = {'infectious_period': period_df,
                     'population': population_df,
-                    'pre_info': pre_info, 'test_info': test_info, 'initial_dict': initial_dict}
+                    'pre_info': pre_info,
+                    'test_info': test_info,
+                    'initial_dict': initial_dict,
+                    'sird_info': pre_info.get_sird_info(),
+                    'sird_dict': sird_dict}
     save_dataset_for_sird_model(country, dataset_dict)
     return dataset_dict
 
@@ -70,9 +75,9 @@ if __name__ == '__main__':
 
     pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                                increase=True, daily=True, remove_zero=True,
-                               smoothing=True, window=5, divide=False)
+                               smoothing=True, window=5, divide=False, pre_type=PreType.PRE)
     test_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=True, remove_zero=True,
-                              smoothing=True, window=5, divide=False)
+                              smoothing=True, window=5, divide=False, pre_type=PreType.TEST)
 
     dataset_dict = get_dataset_for_sird_model(country, pre_info, test_info)

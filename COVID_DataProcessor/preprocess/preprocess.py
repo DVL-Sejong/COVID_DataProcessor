@@ -1,5 +1,6 @@
-from COVID_DataProcessor.datatype import Country, PreprocessInfo
-from COVID_DataProcessor.io import load_links, load_origin_data, load_population, save_preprocessed_dict
+from COVID_DataProcessor.datatype import Country, PreprocessInfo, PreType
+from COVID_DataProcessor.io import load_links, load_origin_data, load_population, save_preprocessed_dict, \
+    load_preprocessed_data
 from COVID_DataProcessor.io import save_setting, save_sird_dict
 from copy import copy
 
@@ -7,11 +8,11 @@ import pandas as pd
 import numpy as np
 
 
-def get_sird_dict(country, sird_info):
+def get_sird_dict(country, pre_info):
+    sird_info = pre_info.get_sird_info()
     save_setting(sird_info, 'sird_info')
 
-    data_dict = load_origin_data(country)
-    preprocessed_dict = preprocess_origin_dict(country, data_dict, sird_info)
+    preprocessed_dict = load_preprocessed_data(country, pre_info)
     sird_dict = convert_columns_to_sird(country, preprocessed_dict, sird_info)
     save_sird_dict(country, sird_info, sird_dict)
 
@@ -251,8 +252,8 @@ if __name__ == '__main__':
     country = Country.ITALY
     link_df = load_links(country)
 
-    sird_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+    pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=True, remove_zero=True,
-                              smoothing=True, window=5, divide=False)
+                              smoothing=True, window=5, divide=True, pre_type=PreType.PRE)
 
-    sird_dict = get_sird_dict(country, sird_info)
+    sird_dict = get_sird_dict(country, pre_info)
