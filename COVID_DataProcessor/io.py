@@ -120,7 +120,7 @@ def load_I_df(country, pre_info):
     return I_df
 
 
-def sird_to_I(country, pre_info):
+def sird_to_I(country, sird_info):
     regions = load_regions(country)
     link_df = load_links(country)
     dates = get_period(start_date=link_df['start_date'], end_date=link_df['end_date'], out_date_format='%Y-%m-%d')
@@ -128,7 +128,7 @@ def sird_to_I(country, pre_info):
     I_df = pd.DataFrame(index=regions, columns=dates)
     I_df.index.name = 'regions'
 
-    sird_dict = load_sird_dict(country, pre_info)
+    sird_dict = load_sird_dict(country, sird_info)
     for region, sird_df in sird_dict.items():
         region_I = sird_df.loc[:, 'infected']
         I_df.loc[region, :] = region_I
@@ -196,8 +196,8 @@ def save_sird_dict(country, sird_info, sird_dict, base_path=None):
     save_dict(sird_path, sird_dict, 'SIRD')
 
 
-def save_I_df(country, pre_info, I_df):
-    i_path = get_safe_path([DATASET_PATH, get_country_name(country), 'i_data', pre_info.get_hash()])
+def save_I_df(country, sird_info, I_df):
+    i_path = get_safe_path([DATASET_PATH, get_country_name(country), 'i_data', sird_info.get_hash()])
     saving_path = join(i_path, 'I.csv')
     I_df.to_csv(saving_path)
     print(f'saving I_df to {saving_path}')
@@ -233,6 +233,14 @@ def save_dataset_for_r0_model(country, dataset_dict):
     save_preprocessed_dict(country, dataset_dict['pre_info'], dataset_dict['pre_dict'], dataset_path)
     save_first_confirmed_date(country, dataset_dict['first_confirmed'], dataset_path)
     dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))
+
+
+def save_dataset_for_nipa_model(country, dataset_dict):
+    dataset_path = get_safe_path([RESULT_PATH, 'NIPA', get_country_name(country)])
+    print(f'save dataset for NIPA model under {dataset_path}')
+    dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))
+    i_path = get_safe_path([dataset_path, 'I', dataset_dict['sird_info'].get_hash()])
+    dataset_dict['i'].to_csv(join(i_path, 'I.csv'))
 
 
 def save_infectious_period(country, period_df, base_path=None):
