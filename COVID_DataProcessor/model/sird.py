@@ -1,10 +1,9 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo, PreType
-from COVID_DataProcessor.io import load_sird_dict, load_r0_df, load_links, load_preprocessed_data
+from COVID_DataProcessor.io import load_r0_df, load_links, load_preprocessed_data
 from COVID_DataProcessor.io import save_infectious_period, save_dataset_for_sird_model
 from COVID_DataProcessor.io import save_sird_initial_info, load_population, load_regions
 from COVID_DataProcessor.preprocess.preprocess import get_sird_dict
 from COVID_DataProcessor.util import get_common_dates, generate_dataframe
-from copy import copy
 
 import pandas as pd
 
@@ -13,7 +12,7 @@ def get_dataset_for_sird_model(country, pre_info, test_info):
     period_df = get_infectious_period(country)
     population_df = load_population(country)
     initial_dict = get_initial_dict(country, pre_info, test_info)
-    sird_dict = get_sird_dict(country, pre_info)
+    sird_dict = get_sird_dict(country, pre_info.get_sird_info())
 
     dataset_dict = {'infectious_period': period_df,
                     'population': population_df,

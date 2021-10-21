@@ -1,5 +1,5 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo, PreType
-from COVID_DataProcessor.io import load_links, load_population, load_preprocessed_data
+from COVID_DataProcessor.io import load_links, load_population, load_origin_data
 from COVID_DataProcessor.io import save_preprocessed_dict, save_setting, save_sird_dict
 from COVID_DataProcessor.util import get_period, generate_dataframe
 from datetime import datetime, timedelta
@@ -9,11 +9,11 @@ import pandas as pd
 import numpy as np
 
 
-def get_sird_dict(country, pre_info):
-    sird_info = pre_info.get_sird_info()
+def get_sird_dict(country, sird_info):
     save_setting(sird_info, 'sird_info')
 
-    preprocessed_dict = load_preprocessed_data(country, pre_info)
+    origin_dict = load_origin_data(country)
+    preprocessed_dict = preprocess_origin_dict(country, origin_dict, sird_info)
     sird_dict = convert_columns_to_sird(country, preprocessed_dict, sird_info)
     save_sird_dict(country, sird_info, sird_dict)
 
@@ -61,15 +61,17 @@ def convert_columns_to_sird(country, dataset_dict, sird_info):
     for region, dataset in dataset_dict.items():
         new_df = pd.DataFrame(columns=new_columns)
         dates = dataset.index.to_list()
+
         infected = dataset['active'].to_numpy()
         recovered = dataset['recovered'].to_numpy()
         deceased = dataset['deaths'].to_numpy()
 
+        population = load_population(country, region)
         if sird_info.divide is False:
-            population = load_population(country, region)
             susceptible = np.full(infected.shape, population) - infected - recovered - deceased
         else:
-            susceptible = np.ones_like(infected) - infected - recovered - deceased
+            susceptible = np.ones_like(infected)\
+                          - (infected / population) - (recovered / population) - (deceased / population)
 
         new_df['date'] = dates
         new_df['susceptible'] = susceptible
@@ -257,8 +259,8 @@ if __name__ == '__main__':
     country = Country.ITALY
     link_df = load_links(country)
 
-    pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, remove_zero=True,
-                              smoothing=True, window=5, divide=True, pre_type=PreType.PRE)
+    sird_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+                               increase=True, daily=True, remove_zero=True,
+                               smoothing=True, window=5, divide=False, pre_type=PreType.SIRD)
 
-    sird_dict = get_sird_dict(country, pre_info)
+    sird_dict = get_sird_dict(country, sird_info)
