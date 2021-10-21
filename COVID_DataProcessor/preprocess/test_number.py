@@ -1,5 +1,5 @@
-from COVID_DataProcessor.datatype import Country, get_country_name
-from COVID_DataProcessor.io import save_setting, load_raw_data, load_regions, save_test_number
+from COVID_DataProcessor.datatype import Country, get_country_name, PreprocessInfo, PreType
+from COVID_DataProcessor.io import save_setting, load_raw_data, load_regions, save_test_number, load_links
 from COVID_DataProcessor.preprocess.preprocess import preprocess
 from COVID_DataProcessor.util import get_period, generate_dataframe
 from datetime import datetime, timedelta
@@ -24,8 +24,9 @@ def get_test_number(country, test_info):
 
 def preprocess_test_number(test_num_df, test_info):
     regions = test_num_df.index.tolist()
-    preprocessed_df = preprocess(test_num_df.T, None, test_info, regions)
-    return preprocessed_df.T
+    preprocessed_df = preprocess(test_num_df.T, None, test_info, regions).T
+    preprocessed_df.index.name = 'regions'
+    return preprocessed_df
 
 
 def get_test_number_of_us(country, test_info):
@@ -99,3 +100,14 @@ def get_test_number_of_india(country, test_info):
     test_num_df = preprocess_test_number(test_num_df, test_info)
     save_test_number(country, test_info, test_num_df)
     return test_num_df
+
+
+if __name__ == '__main__':
+    country = Country.ITALY
+    link_df = load_links(country)
+
+    test_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
+                               increase=False, daily=True, remove_zero=True,
+                               smoothing=True, window=5, divide=False, pre_type=PreType.TEST)
+
+    get_test_number(country, test_info)

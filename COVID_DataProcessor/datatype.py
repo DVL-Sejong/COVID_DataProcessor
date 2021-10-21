@@ -187,6 +187,9 @@ class PreprocessInfo:
         return hash_key
 
     def check_valid(self):
+        if self.pre_type is PreType.TEST and self.increase is True:
+            raise ValueError(f'increase cannot be True for test number dataset!')
+
         if self.daily is False and self.remove_zero is True:
             self.remove_zero = False
             print(f'remove_zero cannot be implemented when daily is set to False.', end=' ')
