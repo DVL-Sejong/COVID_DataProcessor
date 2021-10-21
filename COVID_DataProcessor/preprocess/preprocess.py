@@ -1,6 +1,8 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo, PreType
 from COVID_DataProcessor.io import load_links, load_population, load_preprocessed_data
 from COVID_DataProcessor.io import save_preprocessed_dict, save_setting, save_sird_dict
+from COVID_DataProcessor.util import get_period, generate_dataframe
+from datetime import datetime, timedelta
 from copy import copy
 
 import pandas as pd
@@ -45,6 +47,9 @@ def preprocess(parsed_df, population, pre_info, targets=None):
         parsed_df = apply_moving_average(parsed_df, targets=targets, window=pre_info.window)
     if pre_info.divide:
         parsed_df = divide_by_population(parsed_df, population)
+
+    if pre_info.pre_type == PreType.TEST:
+        parsed_df = cut_first_zeros(parsed_df)
 
     return parsed_df
 
@@ -119,26 +124,18 @@ def remove_zero_period(target_df, targets):
 
     for target in targets:
         target_values = preprocessed_df[target].to_list()
-        daily_values = remove_target_zeros(target_values)
+        daily_values = make_zero_and_negative_removed(target_values)
         preprocessed_df.loc[:, target] = daily_values
 
     return preprocessed_df
 
 
-def remove_target_zeros(target_values):
-    is_zero_start = True if target_values[0] == 0 else False
+def make_zero_and_negative_removed(target_values):
+    target_values = copy(target_values)
 
-    for i in range(1, len(target_values)):
-        if is_zero_start:
-            if target_values[i] == 0:
-                continue
-            else:
-                is_zero_start = False
-                continue
-
-        if target_values[i - 1] < 0 or target_values[i] > 0:
-            is_zero_start = False
-            continue
+    for i, value in enumerate(target_values):
+        if i == 0: continue
+        if target_values[i-1] <= 0 or value > 0: continue
 
         max_index = get_nonzero_index(target_values, i)
         target_values = interpolate(target_values, i - 1, max_index)
@@ -235,26 +232,25 @@ def interpolate(region_values, start_index, end_index):
     return region_values
 
 
-def make_zero_and_negative_removed(target_values):
-    target_values = copy(target_values)
+def cut_first_zeros(target_df):
+    origin_dates = target_df.index.tolist()
+    regions = target_df.columns.to_list()
 
-    for i, value in enumerate(target_values):
-        if i == 0: continue
-        if target_values[i-1] <= 0 or value > 0: continue
+    max_diff = 0
+    for region in regions:
+        region_values = copy(target_df[region].to_list())
+        trim_values = np.trim_zeros(region_values, 'f')
+        if len(region_values) - len(trim_values) > max_diff:
+            max_diff = len(region_values) - len(trim_values)
 
-        max_index = -1
-        for j in range(i + 1, len(target_values) - 1):
-            if target_values[j] > 0:
-                max_index = j
-                break
+    new_first_day = datetime.strptime(origin_dates[0], '%Y-%m-%d') + timedelta(days=max_diff)
+    new_period = get_period(new_first_day, origin_dates[-1], '%Y-%m-%d')
+    cut_df = generate_dataframe(new_period, regions, 'regions')
 
-        if max_index != -1:
-            target_values = interpolate(target_values, i - 1, max_index)
-        else:
-            target_values[i:] = [target_values[i-1] for _ in range(len(target_values[i:]))]
-            break
+    for region in regions:
+        cut_df[region] = target_df.loc[new_period, region]
 
-    return target_values
+    return cut_df
 
 
 if __name__ == '__main__':

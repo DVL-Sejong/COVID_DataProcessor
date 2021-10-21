@@ -24,8 +24,9 @@ def get_test_number(country, test_info):
 
 def preprocess_test_number(test_num_df, test_info):
     regions = test_num_df.index.tolist()
-    preprocessed_df = preprocess(test_num_df.T, None, test_info, regions)
-    return preprocessed_df.T
+    preprocessed_df = preprocess(test_num_df.T, None, test_info, regions).T
+    preprocessed_df.index.name = 'regions'
+    return preprocessed_df
 
 
 def get_test_number_of_us(country, test_info):
