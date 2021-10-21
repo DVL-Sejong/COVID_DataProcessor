@@ -2,6 +2,7 @@ from COVID_DataProcessor.util import get_date_format
 from dataclasses import dataclass, field
 from datetime import datetime, date
 from enum import Enum
+from copy import copy
 
 import hashlib
 
@@ -15,8 +16,9 @@ class Country(Enum):
 
 
 class PreType(Enum):
-    SIRD = 0
-    TEST = 1
+    PRE = 0
+    SIRD = 1
+    TEST = 2
 
 
 @dataclass
@@ -39,12 +41,12 @@ class PreprocessInfo:
     _window: int = field(default=False)
     divide: bool = None
     _divide: bool = field(default=True)
-    pre_type: bool = None
-    _pre_type: bool = field(default=True)
+    pre_type: PreType = None
+    _pre_type: PreType = field(default=True)
 
     def __init__(self, country, start, end,
                  increase: bool, daily: bool, remove_zero: bool,
-                 smoothing: bool, window: int, divide: bool, pre_type: bool = PreType.SIRD):
+                 smoothing: bool, window: int, divide: bool, pre_type: PreType):
         self.country = country
         self.start = start
         self.end = end
@@ -172,6 +174,14 @@ class PreprocessInfo:
     def divide(self, divide: bool):
         self._divide = divide
 
+    @property
+    def pre_type(self) -> PreType:
+        return self._pre_type
+
+    @pre_type.setter
+    def pre_type(self, pre_type: PreType):
+        self._pre_type = pre_type
+
     def get_hash(self):
         hash_key = hashlib.sha1(self.__repr__().encode()).hexdigest()[:6]
         return hash_key
@@ -195,6 +205,12 @@ class PreprocessInfo:
 
         if self.pre_type is PreType.TEST and self.divide is True:
             raise ValueError(f'divide cannot be True for test number dataset!')
+
+    def get_sird_info(self):
+        sird_info = copy(self)
+        sird_info.pre_type = PreType.SIRD
+        sird_info.divide = True
+        return sird_info
 
 
 @dataclass

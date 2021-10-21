@@ -1,4 +1,4 @@
-from COVID_DataProcessor.datatype import Country, PreprocessInfo, get_country_name
+from COVID_DataProcessor.datatype import Country, PreprocessInfo, get_country_name, PreType
 from COVID_DataProcessor.util import get_period, path_to_name
 from dataclasses import fields
 from os.path import join, abspath, dirname, isfile
@@ -187,11 +187,11 @@ def save_preprocessed_dict(country, pre_info, preprocessed_dict, base_path=None)
     save_dict(pre_path, preprocessed_dict, 'preprocessed')
 
 
-def save_sird_dict(country, pre_info, sird_dict, base_path=None):
+def save_sird_dict(country, sird_info, sird_dict, base_path=None):
     if base_path is None:
-        sird_list = [DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash()]
+        sird_list = [DATASET_PATH, get_country_name(country), 'sird_data', sird_info.get_hash()]
     else:
-        sird_list = [base_path, 'sird', pre_info.get_hash()]
+        sird_list = [base_path, 'sird', sird_info.get_hash()]
     sird_path = get_safe_path(sird_list)
     save_dict(sird_path, sird_dict, 'SIRD')
 
@@ -255,6 +255,7 @@ def save_dataset_for_sird_model(country, dataset_dict):
     dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))
     save_sird_initial_dict(country, dataset_dict['initial_dict'],
                            dataset_dict['pre_info'], dataset_dict['test_info'], dataset_path)
+    save_sird_dict(country, dataset_dict['sird_info'], dataset_dict['sird_dict'], dataset_path)
 
 
 def save_setting(param_class, class_name):
@@ -289,5 +290,5 @@ if __name__ == '__main__':
     population_df = load_population(country)
     pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=True, remove_zero=True,
-                              smoothing=True, window=5, divide=True)
+                              smoothing=True, window=5, divide=True, pre_type=PreType.PRE)
     save_setting(pre_info, 'pre_info')

@@ -1,4 +1,4 @@
-from COVID_DataProcessor.datatype import Country, PreprocessInfo
+from COVID_DataProcessor.datatype import Country, PreprocessInfo, PreType
 from COVID_DataProcessor.io import load_population, load_links, load_regions
 from COVID_DataProcessor.io import load_us_confirmed_data, load_preprocessed_data
 from COVID_DataProcessor.io import load_origin_data, save_first_confirmed_date, save_dataset_for_r0_model
@@ -50,10 +50,10 @@ if __name__ == '__main__':
 
     pre_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                                increase=True, daily=True, remove_zero=True,
-                               smoothing=True, window=5, divide=False)
+                               smoothing=True, window=5, divide=False, pre_type=PreType.PRE)
 
     test_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
                               increase=True, daily=True, remove_zero=True,
-                              smoothing=True, window=5, divide=False)
+                              smoothing=True, window=5, divide=False, pre_type=PreType.TEST)
 
     dataset_dict = get_dataset_for_r0_model(country, pre_info, test_info)
