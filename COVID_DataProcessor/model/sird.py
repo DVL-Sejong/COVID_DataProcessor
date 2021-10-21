@@ -77,7 +77,7 @@ if __name__ == '__main__':
                                increase=True, daily=True, remove_zero=True,
                                smoothing=True, window=5, divide=False, pre_type=PreType.PRE)
     test_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
-                              increase=True, daily=True, remove_zero=True,
+                              increase=False, daily=True, remove_zero=True,
                               smoothing=True, window=5, divide=False, pre_type=PreType.TEST)
 
     dataset_dict = get_dataset_for_sird_model(country, pre_info, test_info)
