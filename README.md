@@ -65,3 +65,14 @@ download.py 실행 -> preprocess.py 실행 -> r0.py 실행
 
 smoothing 적용될 때 앞 뒤 자름? 아직 잘 모르겠음
 
+r0랑 mortality rate 계산할 때 인구수로 나눈 다음에 해도 됨? -> 아마 안될걸?
+
+
+
+### sird
+
+pre_info에서 divide True로 설정한 다음에 전처리 수행하는 방식으로?
+
+
+
+### TODO

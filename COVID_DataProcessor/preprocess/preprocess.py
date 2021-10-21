@@ -1,7 +1,6 @@
 from COVID_DataProcessor.datatype import Country, PreprocessInfo, PreType
-from COVID_DataProcessor.io import load_links, load_origin_data, load_population, save_preprocessed_dict, \
-    load_preprocessed_data
-from COVID_DataProcessor.io import save_setting, save_sird_dict
+from COVID_DataProcessor.io import load_links, load_population, load_preprocessed_data
+from COVID_DataProcessor.io import save_preprocessed_dict, save_setting, save_sird_dict
 from copy import copy
 
 import pandas as pd
@@ -20,7 +19,7 @@ def get_sird_dict(country, pre_info):
 
 
 def preprocess_origin_dict(country, data_dict, pre_info):
-    save_setting(sird_info, 'pre_info')
+    save_setting(pre_info, 'pre_info')
     preprocessed_dict = dict()
 
     for region, region_df in data_dict.items():
@@ -127,8 +126,18 @@ def remove_zero_period(target_df, targets):
 
 
 def remove_target_zeros(target_values):
+    is_zero_start = True if target_values[0] == 0 else False
+
     for i in range(1, len(target_values)):
-        if target_values[i - 1] == 0 or target_values[i] != 0:
+        if is_zero_start:
+            if target_values[i] == 0:
+                continue
+            else:
+                is_zero_start = False
+                continue
+
+        if target_values[i - 1] < 0 or target_values[i] > 0:
+            is_zero_start = False
             continue
 
         max_index = get_nonzero_index(target_values, i)
