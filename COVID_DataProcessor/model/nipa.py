@@ -19,7 +19,7 @@ if __name__ == '__main__':
     link_df = load_links(country)
 
     sird_info = PreprocessInfo(country=country, start=link_df['start_date'], end=link_df['end_date'],
-                               increase=False, daily=True, remove_zero=True,
-                               smoothing=True, window=5, divide=True, pre_type=PreType.SIRD)
+                               increase=True, daily=True, remove_zero=True,
+                               smoothing=True, window=5, divide=False, pre_type=PreType.SIRD)
 
     dataset_dict = get_dataset_for_sird_model(country, sird_info)

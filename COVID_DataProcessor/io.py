@@ -105,6 +105,10 @@ def load_sird_dict(country, pre_info):
     sird_path = join(DATASET_PATH, get_country_name(country), 'sird_data', pre_info.get_hash())
     sird_path_list = glob(f'{sird_path}/*.csv')
 
+    if len(sird_path_list) == 0:
+        print(f'SIRD data of {get_country_name(country)} is not existing!')
+        raise FileNotFoundError(sird_path)
+
     sird_dict = dict()
     for target_path in sird_path_list:
         region_name = path_to_name(target_path)
@@ -133,7 +137,7 @@ def sird_to_I(country, sird_info):
         region_I = sird_df.loc[:, 'infected']
         I_df.loc[region, :] = region_I
 
-    return I_df
+    return I_df.iloc[:, 1:]
 
 
 def load_r0_df(country, pre_hash, test_hash):
