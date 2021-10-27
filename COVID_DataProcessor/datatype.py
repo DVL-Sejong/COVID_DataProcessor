@@ -209,6 +209,9 @@ class PreprocessInfo:
         if self.pre_type is PreType.TEST and self.divide is True:
             raise ValueError(f'divide cannot be True for test number dataset!')
 
+        if self.pre_type is PreType.SIRD and self.divide is False:
+            raise ValueError(f'divide CANNOT be False for SIRD dataset!')
+
     def get_sird_info(self):
         sird_info = copy(self)
         sird_info.pre_type = PreType.SIRD
