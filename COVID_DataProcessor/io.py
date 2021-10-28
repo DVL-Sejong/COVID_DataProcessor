@@ -270,6 +270,13 @@ def save_dataset_for_sird_model(country, dataset_dict):
     save_sird_dict(country, dataset_dict['sird_info'], dataset_dict['sird_dict'], dataset_path)
 
 
+def save_dataset_for_deepnipa(country, dataset_dict):
+    dataset_path = get_safe_path([RESULT_PATH, 'DeepNIPA', get_country_name(country)])
+    print(f'save dataset for DeepNIPA under {dataset_path}')
+    dataset_dict['population'].to_csv(join(dataset_path, 'population.csv'))
+    save_sird_dict(country, dataset_dict['sird_info'], dataset_dict['sird_dict'], dataset_path)
+
+
 def save_setting(param_class, class_name):
     new_param_dict = dict()
     new_param_dict.update({'hash': param_class.get_hash()})
