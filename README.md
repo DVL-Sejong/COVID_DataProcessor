@@ -120,4 +120,17 @@ Population data are collected on online. Population of [US](dataset/US/populatio
   - There are three types in PreType. pre_type is used for validate conditions for the type of the data.
   - `PRE`, `SIRD`, `TEST` are available to use.
 
+### We are going to use...
 
+- Ebola
+  - [WHO, 2014년 11월 14일부터 2016년 5월 11일까지 주 단위로 업데이트](https://apps.who.int/gho/data/view.ebola-sitrep.ebola-summary-20141112?lang=en)
+    - 확진 케이스와 사망 케이스에 대한 누적 데이터가 confirmed, probable, suspected, total로 제공
+    - Guinea, Liberia, Sierra Leone 세 지역
+  - [Congo, 2018년 8월 4일부터 2020년 7월 11일까지 일 단위로 업데이트](https://data.humdata.org/dataset/ebola-cases-and-deaths-drc-north-kivu)
+    - National과 health zone 두 개로 나눠서 데이터셋 제공됨
+    - csv 형식으로 제공되기 때문에 파싱 과정은 필요 없음
+    - confirmed cases와 probable cases, confirmed deaths가 제공됨
+  - [KNOEMA](https://knoema.com/atlas/topics/Ebola/datasets)
+    - professional로 계정 전환해야 자료 볼 수 있다는데, 여기서 활용 가능한 데이터는 WHO 데이터밖에 없기 때문에 좀 더 찾아봐야 할 듯?
+    - Regional WHO data on Ebola Cases in DR Congo/Guinea/Liberia/Sierra Leone
+      - Total number of cases, suspected, probable, confirmed, deaths 제공
